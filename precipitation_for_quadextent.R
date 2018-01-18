@@ -79,7 +79,11 @@ for (i in 1:nrow(pptstat))
   }
   layer <- year - 1895
   pptstat[i, "ppt_check"] <- extract(subset(pptall,layer), quads[i,], fun = mean)
-  print(paste(i, "of", nrow(pptstat)))
+  
+  if(i%%1000 == 0)
+  {
+    print(paste(i, "of", nrow(pptstat)))
+  }
 }
 
 # Join precip mean and sd to shapefile ------------------------------------
