@@ -44,5 +44,30 @@ quads <- readOGR("quads", "Historical_Topo_Maps_subset")
 
 # Zonal stats for each quad -----------------------------------------------
 
-quadmean <- extract(pptmean, quads, fun = mean, df = T, na.rm = T)
-quadsd <- extract(pptsd, quads, fun = sd, df = T, na.rm = T)
+if(!file.exists("ppt/csv/ppt_wymean.csv"))
+{
+  quadmean <- extract(pptmean, quads, fun = mean, df = T, na.rm = T)
+  colnames(quadmean) <- c("ID", "ppt_mean")
+  write.csv(quadmean, "ppt/csv/ppt_wymean.csv", row.names = F)
+}else
+{
+  quadmean <- read.csv("ppt/csv/ppt_wymean.csv")
+}
+
+if(!file.exists("ppt/csv/ppt_wymean.csv"))
+{
+  quadsd <- extract(pptsd, quads, fun = sd, df = T, na.rm = T)
+  colnames(quadsd) <- c("ID", "ppt_sd")
+  write.csv(quadsd, "ppt/csv/ppt_wysd.csv", row.names = F)
+}else
+{
+  quadsd <- read.csv("ppt/csv/ppt_wysd.csv")
+}
+
+
+
+# Join precip mean and sd to shapefile ------------------------------------
+
+join1 <- merge(quads, quadmean, by.x="US_7_ID", by.y="ID")
+join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
+writeOGR(join2, "quads", "quads_ppt", driver="ESRI Shapefile")
