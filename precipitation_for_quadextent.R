@@ -78,7 +78,14 @@ for (i in 1:nrow(pptstat))
     year <- as.integer(as.character(data.frame(quads)[i, "Survey_Yea"]))
   }
   layer <- year - 1895
-  pptstat[i, "ppt_check"] <- extract(subset(pptall,layer), quads[i,], fun = mean)
+  if (layer > 0 & layer < 122)
+  {
+    pptstat[i, "ppt_check"] <- extract(subset(pptall,layer), quads[i,], fun = mean)
+  }else
+  {
+    print(paste(layer, year))
+  }
+  
   
   if(i%%1000 == 0)
   {
