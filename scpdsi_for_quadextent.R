@@ -26,7 +26,7 @@ quads <- readOGR("quads", "quads_ppt") #path to joined shp resulting from file '
 
 # Zonal stats for each quad -----------------------------------------------
 
-if(!file.exists("scpdsi/csv/scpdsi_wymean.csv"))
+if(!file.exists("scpdsi/csv/scpdsi_wyOverallMean.csv"))
 {
   quadmean <- extract(scpdsimean, quads, fun = mean, df = T, na.rm = T)
   colnames(quadmean) <- c("ID", "pdsi_mean")
@@ -36,9 +36,9 @@ if(!file.exists("scpdsi/csv/scpdsi_wymean.csv"))
   quadmean <- read.csv("scpdsi/csv/scpdsi_wymean.csv")
 }
 
-if(!file.exists("scpdsi/csv/scpdsi_wymean.csv"))
+if(!file.exists("scpdsi/csv/scpdsi_wyOverallSD.csv"))
 {
-  quadsd <- extract(scpdsisd, quads, fun = sd, df = T, na.rm = T)
+  quadsd <- extract(scpdsisd, quads, fun = mean, df = T, na.rm = T)
   colnames(quadsd) <- c("ID", "pdsi_sd")
   write.csv(quadsd, "scpdsi/csv/scpdsi_wysd.csv", row.names = F)
 }else
@@ -51,7 +51,8 @@ scpdsistat <- merge(quadmean, quadsd, by="ID")
 # Get precip in quad for field check year ---------------------------------
 
 scpdsiall = brick("scpdsi/wateryear/scpdsi_wymean.tif")
-scpdsistat$ppt_check <- NA
+scpdsistat$pdsi_check <- NA
+scpdsistat$year_check <- NA
 for (i in 1:nrow(scpdsistat))
 {
   year <- as.integer(as.character(data.frame(quads)[i, "Field_Chec"]))
@@ -62,7 +63,8 @@ for (i in 1:nrow(scpdsistat))
   layer <- year - 1895
   if (layer > 0 & layer < 122)
   {
-    scpdsistat[i, "ppt_check"] <- extract(subset(scpdsiall,layer), quads[i,], fun = mean)
+    scpdsistat[i, "pdsi_check"] <- extract(subset(scpdsiall,layer), quads[i,], fun = mean)
+    scpdsistat[i, "year_check"] <- year
   }else
   {
     print(paste(layer, year))
@@ -77,9 +79,9 @@ for (i in 1:nrow(scpdsistat))
 
 # Join precip mean and sd to shapefile ------------------------------------
 
-join1 <- merge(quads, quadmean, by.x="US_7_ID", by.y="ID")
-join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
-writeOGR(join2, "quads", "quads_ppt_scpdsi", driver="ESRI Shapefile")
+join1 <- merge(quads, scpdsistat, by.x="US_7_ID", by.y="ID")
+#join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
+writeOGR(join1, "quads", "quads_ppt_scpdsi", driver="ESRI Shapefile")
 
 
 
