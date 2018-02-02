@@ -26,7 +26,7 @@ quads <- readOGR("quads", "quads_ppt") #path to joined shp resulting from file '
 
 # Zonal stats for each quad -----------------------------------------------
 
-if(!file.exists("scpdsi/csv/scpdsi_wyOverallMean.csv"))
+if(!file.exists("scpdsi/csv/scpdsi_wymean.csv"))
 {
   quadmean <- extract(scpdsimean, quads, fun = mean, df = T, na.rm = T)
   colnames(quadmean) <- c("ID", "pdsi_mean")
@@ -36,7 +36,7 @@ if(!file.exists("scpdsi/csv/scpdsi_wyOverallMean.csv"))
   quadmean <- read.csv("scpdsi/csv/scpdsi_wymean.csv")
 }
 
-if(!file.exists("scpdsi/csv/scpdsi_wyOverallSD.csv"))
+if(!file.exists("scpdsi/csv/scpdsi_wysd.csv"))
 {
   quadsd <- extract(scpdsisd, quads, fun = mean, df = T, na.rm = T)
   colnames(quadsd) <- c("ID", "pdsi_sd")
@@ -47,12 +47,14 @@ if(!file.exists("scpdsi/csv/scpdsi_wyOverallSD.csv"))
 }
 
 scpdsistat <- merge(quadmean, quadsd, by="ID")
+scpdsistat$testID <- scpdsistat$ID
+scpdsistat$joinID <- NA
 
 # Get precip in quad for field check year ---------------------------------
 
 scpdsiall = brick("scpdsi/wateryear/scpdsi_wymean.tif")
 scpdsistat$pdsi_check <- NA
-scpdsistat$year_check <- NA
+scpdsistat$year_chks <- NA
 for (i in 1:nrow(scpdsistat))
 {
   year <- as.integer(as.character(data.frame(quads)[i, "Field_Chec"]))
@@ -64,7 +66,8 @@ for (i in 1:nrow(scpdsistat))
   if (layer > 0 & layer < 122)
   {
     scpdsistat[i, "pdsi_check"] <- extract(subset(scpdsiall,layer), quads[i,], fun = mean)
-    scpdsistat[i, "year_check"] <- year
+    scpdsistat[i, "year_chks"] <- year
+    scpdsistat[i, "joinID"] <- as.integer(as.character(data.frame(quads)[i, "Join_ID"]))
   }else
   {
     print(paste(layer, year))
@@ -79,7 +82,7 @@ for (i in 1:nrow(scpdsistat))
 
 # Join precip mean and sd to shapefile ------------------------------------
 
-join1 <- merge(quads, scpdsistat, by.x="US_7_ID", by.y="ID")
+join1 <- merge(quads, scpdsistat, by.x="Join_ID", by.y="joinID")
 #join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
 writeOGR(join1, "quads", "quads_ppt_scpdsi", driver="ESRI Shapefile")
 

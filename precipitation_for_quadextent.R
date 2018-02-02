@@ -65,11 +65,14 @@ if(!file.exists("ppt/csv/ppt_wymean.csv"))
 }
 
 pptstat <- merge(quadmean, quadsd, by="ID")
+pptstat$testID <- pptstat$ID
 
 # Get precip in quad for field check year ---------------------------------
 
 pptall = brick("ppt/wateryear/ppt.tif")
 pptstat$ppt_check <- NA
+pptstat$year_chkp <- NA
+pptstat$joinID <- NA
 for (i in 1:nrow(pptstat))
 {
   year <- as.integer(as.character(data.frame(quads)[i, "Field_Chec"]))
@@ -81,6 +84,8 @@ for (i in 1:nrow(pptstat))
   if (layer > 0 & layer < 122)
   {
     pptstat[i, "ppt_check"] <- extract(subset(pptall,layer), quads[i,], fun = mean)
+    pptstat[i, "year_chkp"] <- year
+    pptstat[i, "joinID"] <- as.integer(as.character(data.frame(quads)[i, "Join_ID"]))
   }else
   {
     print(paste(layer, year))
@@ -95,9 +100,8 @@ for (i in 1:nrow(pptstat))
 
 # Join precip mean and sd to shapefile ------------------------------------
 
-join1 <- merge(quads, quadmean, by.x="US_7_ID", by.y="ID")
-join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
-writeOGR(join2, "quads", "quads_ppt", driver="ESRI Shapefile")
+join1 <- merge(quads, pptstat, by.x="Join_ID", by.y="ID")
+writeOGR(join1, "quads", "quads_ppt", driver="ESRI Shapefile", overwrite_layer=T)
 
 
 
