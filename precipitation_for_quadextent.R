@@ -98,6 +98,9 @@ for (i in 1:nrow(pptstat))
   }
 }
 
+pptstat$pdsi_per <- pnorm((pptstat$ppt_check - pptstat$ppt_mean) / pptstat$ppt_sd)*100
+write.csv(pptstat, "scpdsi/csv/ppt_wy_all.csv", row.names = F)
+
 # Join precip mean and sd to shapefile ------------------------------------
 
 join1 <- merge(quads, pptstat, by.x="Join_ID", by.y="ID")

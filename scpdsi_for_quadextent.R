@@ -80,11 +80,21 @@ for (i in 1:nrow(scpdsistat))
   }
 }
 
+scpdsistat$pdsi_per <- pnorm((scpdsistat$pdsi_check - scpdsistat$pdsi_mean) / scpdsistat$pdsi_sd)*100
+write.csv(scpdsistat, "scpdsi/csv/scpdsi_wy_all.csv", row.names = F)
+
 # Join precip mean and sd to shapefile ------------------------------------
 
 join1 <- merge(quads, scpdsistat, by.x="Join_ID", by.y="joinID")
 #join2 <- merge(join1, quadsd, by.x="US_7_ID", by.y="ID")
-writeOGR(join1, "quads", "quads_ppt_scpdsi", driver="ESRI Shapefile")
+writeOGR(join1, "quads", "quads_ppt_scpdsi", driver="ESRI Shapefile", overwrite_layer=T)
+
+
+# Add percentiles --- OLD CODE --------------------------------------------
+
+quads <- readOGR("quads", "quads_ppt_scpdsi")
+quads$ppt_per <- pnorm((quads$ppt_check - quads$ppt_mean) / quads$ppt_sd)*100
+quads$pdsi_per <- pnorm((quads$pdsi_check - quads$pdsi_mean) / quads$pdsi_sd)*100
 
 
 
