@@ -58,4 +58,5 @@ indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "ctswitch", "pwet")]
 keep <- c("REACHCODE", "switch", "switchdif", "ctswitch", "pwet")
 merge.df <- indat.df[keep]
 joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
+joined.df <- as(joined, "data.frame")
 writeOGR(joined, wd, "buf20_cat_out", driver="ESRI Shapefile")
