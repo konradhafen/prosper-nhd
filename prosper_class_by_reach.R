@@ -27,7 +27,7 @@ indat.df <- indat.df[, !(names(indat.df) %in% drops)]
 
 #get majoirty stat for each year
 maj.df <- indat.df[,grepl("_maj", names(indat.df))]
-maj.df[is.na(maj.df)] <- 0
+#maj.df[is.na(maj.df)] <- 0
 
 #calc min and max majority value across all years
 # maj.df$max <- apply(maj.df, 1, max)
