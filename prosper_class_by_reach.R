@@ -29,8 +29,15 @@ indat.df <- indat.df[, !(names(indat.df) %in% drops)]
 maj.df <- indat.df[,grepl("_maj", names(indat.df))]
 
 #calc min and max majority value across all years
-maj.df$max <- apply(maj.df, 1, max)
-maj.df$min <- apply(maj.df, 1, min)
+# maj.df$max <- apply(maj.df, 1, max)
+# maj.df$min <- apply(maj.df, 1, min)
+maj.temp <- data.frame(max = apply(maj.df, 1, max))
+maj.temp$min <- apply(maj.df, 1, min)
+maj.temp$ctwet <- rowSums(maj.df > 0)
+maj.temp$ctdry <- rowSums(maj.df < 0)
+maj.temp <- transform(maj.temp, ctmin = pmin(ctwet, ctdry))
+
+maj.df = cbind(maj.df, maj.temp)
 
 #if contains both positive and negative values classification changed
 maj.df$switch <- ifelse(maj.df$max > 0 & maj.df$min < 0, 1, 0)
@@ -45,8 +52,8 @@ maj.df$pwet <- maj.df$pwet/13.0
 
 # Add new calculations to original data -----------------------------------
 
-indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "pwet")])
-keep <- c("REACHCODE", "switch", "switchdif", "pwet")
+indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "ctmin", "pwet")])
+keep <- c("REACHCODE", "switch", "switchdif", "ctmin", "pwet")
 merge.df <- indat.df[keep]
 joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
 writeOGR(joined, wd, "buf20_cat_out", driver="ESRI Shapefile")
