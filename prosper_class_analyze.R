@@ -14,12 +14,13 @@ indat <- read.csv(paste(wd,fn,sep="/"))
 # Subset to perennial/intermittnet only and classify overall --------------
 
 pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==46003)
+pidat$nclass <- ifelse(pidat, pidat$FCODE==46006, "Perennial", "Intermittent")
 
 #classify reaches as perennial or intermittent based on pwet
 
 #cutoff proportion for perennial
 cutoff <- 0.75
-pidat$class <- ifelse(pidat$pwet >= cutoff, "Perennial", "Intermittent")
+pidat$pclass <- ifelse(pidat$pwet >= cutoff, "Wet", "Dry")
 
 #melt
 pidat.melt <- melt(pidat)
