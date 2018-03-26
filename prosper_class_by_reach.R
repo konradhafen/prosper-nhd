@@ -60,3 +60,7 @@ merge.df <- indat.df[keep]
 joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
 joined.df <- as(joined, "data.frame")
 writeOGR(joined, wd, "buf20_cat_out", driver="ESRI Shapefile")
+
+###########################################################################
+#Use script prosper_class_analyze.R for subsetting and analysis
+###########################################################################
