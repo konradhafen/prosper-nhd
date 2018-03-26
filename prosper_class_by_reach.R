@@ -37,7 +37,7 @@ maj.temp$min <- apply(maj.df, 1, min)
 maj.temp$ctwet <- rowSums(maj.df > 0)
 maj.temp$ctdry <- rowSums(maj.df < 0)
 maj.temp <- transform(maj.temp, ctmin = pmin(ctwet, ctdry))
-maj.ctswitch <- apply(maj.df, 1, function(x) sum(diff(sign(x)) != 0, na.rm=T))
+maj.temp$ctswitch <- apply(maj.df, 1, function(x) sum(diff(sign(x)) != 0, na.rm=T))
 
 maj.df = cbind(maj.df, maj.temp)
 
@@ -54,8 +54,8 @@ maj.df$pwet <- maj.df$pwet/13.0
 
 # Add new calculations to original data -----------------------------------
 
-indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "ctmin", "pwet")])
-keep <- c("REACHCODE", "switch", "switchdif", "ctmin", "pwet")
+indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "ctswitch", "pwet")])
+keep <- c("REACHCODE", "switch", "switchdif", "ctswitch", "pwet")
 merge.df <- indat.df[keep]
 joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
 writeOGR(joined, wd, "buf20_cat_out", driver="ESRI Shapefile")
