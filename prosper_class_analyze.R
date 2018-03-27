@@ -28,6 +28,14 @@ pidat$dclass <- mapply(misclass_type, pidat$nclass, pidat$pclass)
 pidat.melt <- melt(pidat)
 
 
+
+# Bar plot of misclassification type --------------------------------------
+
+p <- ggplot(pidat.melt) + 
+  stat_count(mapping = aes(x=dclass, y=..prop.., group=1))
+p
+
+
 # functions ---------------------------------------------------------------
 
 misclass_type <- function(nhdclass, prosperclass)
