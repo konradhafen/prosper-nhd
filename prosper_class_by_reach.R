@@ -54,12 +54,13 @@ maj.df$pwet <- maj.df$pwet/13.0
 
 # Add new calculations to original data -----------------------------------
 
-indat.df <- cbind(indat.df, maj.df[c("switch", "switchdif", "ctswitch", "pwet")])
-keep <- c("REACHCODE", "switch", "switchdif", "ctswitch", "pwet")
+indat.df <- cbind(indat.df, maj.df[c("ctwet", "ctdry", "switch", "switchdif", "ctswitch", "pwet")])
+keep <- c("REACHCODE", "ctwet", "ctdry","switch", "switchdif", "ctswitch", "pwet")
 merge.df <- indat.df[keep]
 joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
+joined$disagree <- ifelse(joined$FCODE==46003, joined$ctwet/13, joined$ctdry/13)
 joined.df <- as(joined, "data.frame")
-writeOGR(joined, wd, "buf20_cat_out", driver="ESRI Shapefile")
+writeOGR(joined, "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\shp", "buf20_cat_out", driver="ESRI Shapefile")
 
 ###########################################################################
 #Use script prosper_class_analyze.R for subsetting and analysis
