@@ -6,9 +6,28 @@ library(ggplot2)
 library(reshape2)
 
 wd <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv"
-fn <- "nhd_mr_class_buf20.csv"
+fn <- "nhd_mr_class_buf20.csv" #for all reaches
+fn <- "nhd_mr_class_buf20_huc10.csv" #for huc10s with high disagreement
 
 indat <- read.csv(paste(wd,fn,sep="/"))
+
+# functions ---------------------------------------------------------------
+
+misclass_type <- function(nhdclass, prosperclass)
+{
+  if ((nhdclass == "Perennial" & prosperclass=="Wet") | (nhdclass == "Intermittent" & prosperclass=="Dry"))
+  {
+    return ("same")
+  }
+  else if ((nhdclass == "Perennial" & prosperclass=="Dry"))
+  {
+    return ("nhd wet prosper dry")
+  }
+  else if ((nhdclass == "Intermittent" & prosperclass=="Wet"))
+  {
+    return("nhd dry prosper wet")
+  }
+}
 
 
 # Subset to perennial/intermittnet only and classify overall --------------
@@ -23,6 +42,9 @@ cutoff <- 0.75
 pidat$pclass <- ifelse(pidat$pwet >= cutoff, "Wet", "Dry")
 #run functions section first
 pidat$dclass <- mapply(misclass_type, pidat$nclass, pidat$pclass)
+
+#get HUC8 code (first 8 digits of reachcode)
+pidat$huc8 <- substr(as.character(pidat$REACHCODE), 1, 8)
 
 #melt
 pidat.melt <- melt(pidat)
@@ -63,21 +85,10 @@ ggplot(pidat, aes(x=fac_DA, y=ctswitch)) +
   geom_point() + 
   facet_wrap(~nclass, ncol=1)
 
-# functions ---------------------------------------------------------------
 
-misclass_type <- function(nhdclass, prosperclass)
-{
-  if ((nhdclass == "Perennial" & prosperclass=="Wet") | (nhdclass == "Intermittent" & prosperclass=="Dry"))
-  {
-    return ("same")
-  }
-  else if ((nhdclass == "Perennial" & prosperclass=="Dry"))
-  {
-    return ("nhd wet prosper dry")
-  }
-  else if ((nhdclass == "Intermittent" & prosperclass=="Wet"))
-  {
-    return("nhd dry prosper wet")
-  }
-}
+# Boxplot perennial vs intermittent ---------------------------------------
+
+ggplot(pidat, aes(nclass, pwet)) +
+  geom_boxplot() + 
+  facet_wrap(~huc8, ncol=4)
 
