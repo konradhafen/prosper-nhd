@@ -28,13 +28,40 @@ pidat$dclass <- mapply(misclass_type, pidat$nclass, pidat$pclass)
 pidat.melt <- melt(pidat)
 
 
+# Bar plot of misclassification types -------------------------------------
 
-# Bar plot of misclassification type --------------------------------------
+ggplot(pidat.melt) + 
+  stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement between PROSPER and NHD")
 
-p <- ggplot(pidat.melt) + 
-  stat_count(mapping = aes(x=dclass, y=..prop.., group=1))
-p
 
+# Bar plot of miscalssification by NHD type -------------------------------
+
+ggplot(pidat) + 
+  stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
+  facet_wrap(~nclass, ncol=1) + 
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by NHD classification")
+
+
+# Bary plot of misclassification by PROSPER type --------------------------
+
+ggplot(pidat) + 
+  stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
+  facet_wrap(~pclass, ncol=1) + 
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by PROSPER classification")
+
+
+# Plot of classification changes vs drainage area -------------------------
+
+ggplot(pidat, aes(x=fac_DA, y=ctswitch)) + 
+  geom_point(aes(colour=pwet)) +
+  scale_color_gradient(low="white", high="blue")
+
+# Plot of classification changes vs drainage area -------------------------
+
+ggplot(pidat, aes(x=fac_DA, y=ctswitch)) + 
+  geom_point() + 
+  facet_wrap(~nclass, ncol=1)
 
 # functions ---------------------------------------------------------------
 
