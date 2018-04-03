@@ -21,11 +21,11 @@ misclass_type <- function(nhdclass, prosperclass)
   }
   else if ((nhdclass == "Perennial" & prosperclass=="Dry"))
   {
-    return ("nhd wet prosper dry")
+    return ("NHD wet PROSPER dry")
   }
   else if ((nhdclass == "Intermittent" & prosperclass=="Wet"))
   {
-    return("nhd dry prosper wet")
+    return("NHD dry PROSPER wet")
   }
 }
 
