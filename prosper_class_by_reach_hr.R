@@ -5,15 +5,12 @@ rm(list=ls())
 
 library(rgdal)
 
-wd <- "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\nhd\\MR"
+wd <- "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\shp"
 outwd <- "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\shp"
-fin <- "buf20_cat.shp"
-fout <- "buf20_cat_out.shp"
-lyr <- "buf20_cat"
-fin <- "bull_trout_habitat_buffer_epsg5070.shp"
-fout <- "bt_out.shp"
-lyr <- "bull_trout_habitat_buffer_epsg5070"
-outlyr <- "bt_out"
+fin <- "nhd_hr_buf20_cat_subset.shp"
+fout <- "nhd_hr_buf20_cat_out.shp"
+lyr <- "nhd_hr_buf20_cat_subset"
+
 
 #read shapefile (buffer polygons of MR NHD)
 indat <- readOGR(wd, lyr)
@@ -49,9 +46,6 @@ maj.df = cbind(maj.df, maj.temp)
 #if contains both positive and negative values classification changed
 maj.df$switch <- ifelse(maj.df$max > 0 & maj.df$min < 0, 1, 0)
 
-#difference between min and max classification values indicates confidence
-maj.df$switchdif <- ifelse(maj.df$switch, maj.df$max-maj.df$min, NA)
-
 #proportion of years wet
 maj.df$pwet <- apply(maj.df[1:13]>0, 1, sum)
 maj.df$pwet <- maj.df$pwet/13.0
@@ -59,12 +53,12 @@ maj.df$pwet <- maj.df$pwet/13.0
 
 # Add new calculations to original data -----------------------------------
 
-indat.df <- cbind(indat.df, maj.df[c("ctwet", "ctdry", "switch", "switchdif", "ctswitch", "pwet")])
-keep <- c("REACHCODE", "ctwet", "ctdry","switch", "switchdif", "ctswitch", "pwet")
-keep <- c("ORIG_FID", "ctwet", "ctdry","switch", "switchdif", "ctswitch", "pwet")
+indat.df <- cbind(indat.df, maj.df[c("ctwet", "ctdry", "switch", "ctswitch", "pwet")])
+keep <- c("ID", "ctwet", "ctdry","switch", "ctswitch", "pwet")
+keep <- c("ID", "ctwet", "ctdry","switch", "ctswitch", "pwet")
 merge.df <- indat.df[keep]
 #joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
-joined <- merge(indat, merge.df, by.x="ORIG_FID", by.y="ORIG_FID")
+joined <- merge(indat, merge.df, by.x="ID", by.y="ID")
 #joined$disagree <- ifelse(joined$FCODE==46003, joined$ctwet/13, joined$ctdry/13)
 joined.df <- as(joined, "data.frame")
 writeOGR(joined, outwd, outlyr, driver="ESRI Shapefile")
