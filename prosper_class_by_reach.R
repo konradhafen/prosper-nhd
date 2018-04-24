@@ -54,13 +54,13 @@ maj.temp$ctswitch <- apply(maj.df[, 2:ncol(maj.df)], 1, function(x) sum(diff(sig
 maj.df = cbind(maj.df, maj.temp)
 
 #if contains both positive and negative values classification changed
-maj.df$switch <- ifelse(maj.df$max > 0 & maj.df$min < 0, 1, 0)
+maj.df$switch <- ifelse(maj.df[, 2:ncol(maj.df)]$max > 0 & maj.df[, 2:ncol(maj.df)]$min < 0, 1, 0)
 
 #difference between min and max classification values indicates confidence
 #maj.df$switchdif <- ifelse(maj.df$switch, maj.df$max-maj.df$min, NA)
 
 #proportion of years wet
-maj.df$pwet <- apply(maj.df[1:13]>0, 1, sum)
+maj.df$pwet <- apply(maj.df[2:14]>0, 1, sum)
 maj.df$pwet <- maj.df$pwet/13.0
 
 
