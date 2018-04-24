@@ -4,12 +4,14 @@
 rm(list=ls())
 library(ggplot2)
 library(reshape2)
+library(tidyverse)
 
 wd <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv"
 fn <- "nhd_mr_class_buf20.csv" #for all reaches
 fn <- "nhd_mr_class_buf20_huc810.csv" #for huc10s with high disagreement
+fn <- "nhd_hr_buf20_cat_fcode.csv"
 
-indat <- read.csv(paste(wd,fn,sep="/"))
+indat <- read_csv(paste(wd,fn,sep="/"))
 
 # functions ---------------------------------------------------------------
 
@@ -17,7 +19,7 @@ misclass_type <- function(nhdclass, prosperclass)
 {
   if ((nhdclass == "Perennial" & prosperclass=="Wet") | (nhdclass == "Intermittent" & prosperclass=="Dry"))
   {
-    return ("same")
+    return ("Agree")
   }
   else if ((nhdclass == "Perennial" & prosperclass=="Dry"))
   {
@@ -44,14 +46,19 @@ pidat$pclass <- ifelse(pidat$pwet >= cutoff, "Wet", "Dry")
 pidat$dclass <- mapply(misclass_type, pidat$nclass, pidat$pclass)
 
 #melt
+pidat.melt <- melt(pidat, "ID", c("nclass", "pclass", "dclass"))
 pidat.melt <- melt(pidat)
 
+
+# Save to csv -------------------------------------------------------------
+
+write_csv(pidat, paste(wd,"nhd_hr_buf20_cat_distype.csv",sep="/"))
 
 # Bar plot of misclassification types -------------------------------------
 
 ggplot(pidat.melt) + 
   stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
-  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement between PROSPER and NHD")
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement between PROSPER and HR-NHD")
 
 
 # Bar plot of miscalssification by NHD type -------------------------------
@@ -59,7 +66,7 @@ ggplot(pidat.melt) +
 ggplot(pidat) + 
   stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
   facet_wrap(~nclass, ncol=1) + 
-  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by NHD classification")
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by HR-NHD classification")
 
 
 # Bary plot of misclassification by PROSPER type --------------------------
@@ -67,7 +74,7 @@ ggplot(pidat) +
 ggplot(pidat) + 
   stat_count(mapping = aes(x=dclass, y=..prop.., group=1)) +
   facet_wrap(~pclass, ncol=1) + 
-  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by PROSPER classification")
+  labs(x="Disagreement type", y="Proportion of disagreement", title="Disagreement by PROSPER classification (HR-NHD)")
 
 
 # Plot of classification changes vs drainage area -------------------------

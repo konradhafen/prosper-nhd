@@ -10,6 +10,7 @@ outwd <- "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\shp"
 fin <- "nhd_hr_buf20_cat_subset.shp"
 fout <- "nhd_hr_buf20_cat_out.shp"
 lyr <- "nhd_hr_buf20_cat_subset"
+outlyr <- "nhd_hr_buf20_cat_out"
 
 
 #read shapefile (buffer polygons of MR NHD)
@@ -22,7 +23,7 @@ indat <- readOGR(wd, lyr)
 indat.df <- as(indat, "data.frame")
 
 #drop un-needed stats columns
-drops <- c("c_maj", "c_mean", "c_max", "c_min")
+drops <- c("_maj", "_mean", "_max", "_min")
 indat.df <- indat.df[, !(names(indat.df) %in% drops)]
 
 # Identify features where class changed -----------------------------------
@@ -49,7 +50,6 @@ maj.df$switch <- ifelse(maj.df$max > 0 & maj.df$min < 0, 1, 0)
 #proportion of years wet
 maj.df$pwet <- apply(maj.df[1:13]>0, 1, sum)
 maj.df$pwet <- maj.df$pwet/13.0
-
 
 # Add new calculations to original data -----------------------------------
 
