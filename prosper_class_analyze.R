@@ -94,6 +94,9 @@ prdry <- colSums(rawdat[21:33] == "NHD wet PROSPER dry")/nrow(rawdat)
 prwet <- colSums(rawdat[21:33] == "NHD dry PROSPER wet")/nrow(rawdat)
 years <- seq(2004, 2016)
 
+andat <- data.frame(year=years, agree=agree, prdry=prdry, prwet=prwet)
+andat.melt <- melt(andat, "year")
+
 
 # Plot of misclass type by year -------------------------------------------
 
@@ -102,6 +105,19 @@ plot(years, agree, ylim=c(0,1), pch=NA, xlab="Year", ylab="Proportion of NHD Rea
 lines(years, agree, col="gray")
 lines(years, prdry, col="red")
 lines(years, prwet, col="blue")
+
+
+# Plot of miscalss type by year (ggplot) ----------------------------------
+
+ggplot(data=andat.melt, aes(x=year, y=value, group=variable, color=variable)) + 
+  geom_line() + 
+  geom_point() +
+  scale_color_manual("", values=c("black", "red", "blue"), labels=c("Agree", "NHD wet PROSPER dry", 
+                     "NHD dry PROSPER wet")) + 
+  xlab("Year") + 
+  ylab("Proportion of Reaches") + 
+  scale_y_continuous(limits=c(0.0, 0.7), breaks = seq(0.0, 0.7, 0.1)) +
+  scale_x_continuous(minor_breaks=seq(2004, 2016, 1))
 
 
 # Bar plot of misclassification types -------------------------------------
