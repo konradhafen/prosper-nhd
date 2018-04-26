@@ -13,7 +13,7 @@ fn <- "nhd_hr_buf20_cat_fcode.csv"
 
 indat <- read_csv(paste(wd,fn,sep="/"))
 fn <- "nhd_hr_buf20_cat_maj.csv"
-rawdat <- read_csv(paste(wd, fn, sep="/"))
+rawdat <- data.frame(read_csv(paste(wd, fn, sep="/")))
 
 # functions ---------------------------------------------------------------
 
@@ -78,7 +78,30 @@ write_csv(pidat, paste(wd,"nhd_hr_buf20_cat_distype.csv",sep="/"))
 
 
 # Disagreement by year ----------------------------------------------------
+namecols <- names(rawdat)
 
+for (i in 2:14)
+{
+  rawdat[paste(namecols[i], "cls", sep="_")] <- mapply(misclass_type_cat, rawdat$FCODE, rawdat[,i])
+  print (paste(i, "done"))
+}
+
+
+# Data for plot of misclass by year ---------------------------------------
+
+agree <- colSums(rawdat[21:33] == "Agree")/nrow(rawdat)
+prdry <- colSums(rawdat[21:33] == "NHD wet PROSPER dry")/nrow(rawdat)
+prwet <- colSums(rawdat[21:33] == "NHD dry PROSPER wet")/nrow(rawdat)
+years <- seq(2004, 2016)
+
+
+# Plot of misclass type by year -------------------------------------------
+
+
+plot(years, agree, ylim=c(0,1), pch=NA, xlab="Year", ylab="Proportion of NHD Reaches")
+lines(years, agree, col="gray")
+lines(years, prdry, col="red")
+lines(years, prwet, col="blue")
 
 
 # Bar plot of misclassification types -------------------------------------
