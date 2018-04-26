@@ -12,6 +12,8 @@ fn <- "nhd_mr_class_buf20_huc810.csv" #for huc10s with high disagreement
 fn <- "nhd_hr_buf20_cat_fcode.csv"
 
 indat <- read_csv(paste(wd,fn,sep="/"))
+fn <- "nhd_hr_buf20_cat_maj.csv"
+rawdat <- read_csv(paste(wd, fn, sep="/"))
 
 # functions ---------------------------------------------------------------
 
@@ -31,10 +33,30 @@ misclass_type <- function(nhdclass, prosperclass)
   }
 }
 
+misclass_type_cat <- function(fcode, catval)
+{
+  if ((fcode == 46006 & catval > 0) | (fcode != 46006 & catval < 0))
+  {
+    return ("Agree")
+  }
+  else if (fcode == 46006 & catval < 0)
+  {
+    return ("NHD wet PROSPER dry")
+  }
+  else if (fcode != 46006 & catval > 0)
+  {
+    return("NHD dry PROSPER wet")
+  }
+  else
+  {
+    return ("Invalid")
+  }
+}
+
 
 # Subset to perennial/intermittnet only and classify overall --------------
 
-pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==46003)
+pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==46003 | indat$FCODE == 46007)
 pidat$nclass <- ifelse(pidat$FCODE==46006, "Perennial", "Intermittent")
 
 #classify reaches as perennial or intermittent based on pwet
@@ -53,6 +75,11 @@ pidat.melt <- melt(pidat)
 # Save to csv -------------------------------------------------------------
 
 write_csv(pidat, paste(wd,"nhd_hr_buf20_cat_distype.csv",sep="/"))
+
+
+# Disagreement by year ----------------------------------------------------
+
+
 
 # Bar plot of misclassification types -------------------------------------
 

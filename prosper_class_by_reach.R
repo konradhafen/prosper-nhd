@@ -22,6 +22,7 @@ outlyr <- "bt_out"
 csvfile <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat.csv"
 outcsvfile <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_out.csv"
 outcsv_fcode <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_fcode.csv"
+outcsv_all <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_maj.csv"
 indat.df <- read_csv(csvfile)
 
 # Prep data ---------------------------------------------------------------
@@ -37,7 +38,7 @@ indat.df <- indat.df[, !(names(indat.df) %in% drops)]
 
 #get majoirty stat for each year
 keepcols <- grepl("_maj", names(indat.df))
-keepcols[4] <- TRUE
+keepcols[match("ID", names(indat.df))] <- TRUE
 maj.df <- indat.df[, keepcols]
 #maj.df[is.na(maj.df)] <- 0
 
@@ -73,6 +74,11 @@ keep <- c("ID", "FCODE", "ctwet", "ctdry","switch", "ctswitch", "pwet")
 fcode.df <- indat.df[keep]
 write_csv(merge.df, outcsvfile)
 write_csv(fcode.df, outcsv_fcode)
+keep <-append(names(maj.df), "FCODE")
+remove <- c("min", "max", "ctmin")
+keep <- keep[! keep %in% remove]
+maj.out <- indat.df[keep]
+write_csv(maj.out, outcsv_all)
 #joined <- merge(indat, merge.df, by.x="REACHCODE", by.y="REACHCODE")
 
 # Join to shapefile -------------------------------------------------------
