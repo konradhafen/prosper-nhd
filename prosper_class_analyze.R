@@ -14,6 +14,8 @@ fn <- "nhd_hr_buf20_cat_fcode.csv"
 indat <- read_csv(paste(wd,fn,sep="/"))
 fn <- "nhd_hr_buf20_cat_maj.csv"
 rawdat <- data.frame(read_csv(paste(wd, fn, sep="/")))
+fn <- "E:/konrad/Projects/usgs/prosper-nhd/data/scpdsi/csv/scpdsi_crb_prosper.csv"
+crbpdsi <- read_csv(fn)
 
 # functions ---------------------------------------------------------------
 
@@ -96,6 +98,8 @@ years <- seq(2004, 2016)
 
 andat <- data.frame(year=years, agree=agree, prdry=prdry, prwet=prwet)
 andat.melt <- melt(andat, "year")
+andat$scpdsi <- crbpdsi$scpdsi
+write_csv(andat, "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/disagreement_with_scpdsi.csv")
 
 
 # Plot of misclass type by year -------------------------------------------
