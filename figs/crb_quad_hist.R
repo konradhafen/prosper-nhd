@@ -14,5 +14,5 @@ hist(figdat$chck_year, breaks=seq(min(figdat$chck_year), max(figdat$chck_year), 
 
 # Histogram of scpdsi -----------------------------------------------------
 
-hist(figdat$pdsi_mean, breaks=seq(-10, 10, 0.25),
+hist(figdat$pdsi_mean, breaks=seq(-8, 8, 0.25),
      main="scPDSI During Field Check Water Year", col="gray50", border=NA, xlab="scPDSI")
