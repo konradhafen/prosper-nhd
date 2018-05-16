@@ -29,9 +29,10 @@ TukeyHSD(ct.aov)
 # Anova of means ----------------------------------------------------------
 
 keepcols <- grepl("mean", names(indat))
+keepcols[grep("LENGTHKM", colnames(indat))] <- TRUE
 meanaov.df <- indat[,keepcols]
-meanaov.df.melt <- melt(meanaov.df)
-mean.aov <- aov(value ~ variable, data=meanaov.df.melt)
+meanaov.df.melt <- melt(meanaov.df, id.vars = "LENGTHKM")
+mean.aov <- aov(value ~ variable*LENGTHKM, data=meanaov.df.melt)
 summary(mean.aov)
 TukeyHSD(mean.aov)
 
@@ -79,6 +80,8 @@ for (i in seq(20,100,20))
   mean.df[pername] <- mean.df[newname]/mean.df$mean
 }
 
+mean.lm <- lm(per20 ~ length, data=mean.df)
+summary(mean.lm)
 
 # difference in sd --------------------------------------------------------
 
