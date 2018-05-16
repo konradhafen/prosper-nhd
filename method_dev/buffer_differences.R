@@ -56,7 +56,7 @@ TukeyHSD(sd.aov)
 
 # Difference in counts between catseed and buffer sizes -------------------
 
-diff.df <- data.frame(gc=indat$GRIDCODE, count=indat$count)
+diff.df <- data.frame(gc=indat$GRIDCODE, length=indat$LENGTHKM, count=indat$count)
 for (i in seq(20,100,20))
 {
   varname <- paste("count",i,sep="")
@@ -69,7 +69,7 @@ for (i in seq(20,100,20))
 
 # Difference in means -----------------------------------------------------
 
-mean.df <- data.frame(gc=indat$GRIDCODE, mean=indat$mean)
+mean.df <- data.frame(gc=indat$GRIDCODE, length=indat$LENGTHKM, mean=indat$mean)
 for (i in seq(20,100,20))
 {
   varname <- paste("mean",i,sep="")
@@ -77,6 +77,19 @@ for (i in seq(20,100,20))
   pername <- paste("per",i,sep="")
   mean.df[newname] <- indat[varname] - indat$mean
   mean.df[pername] <- mean.df[newname]/mean.df$mean
+}
+
+
+# difference in sd --------------------------------------------------------
+
+sd.df <- data.frame(gc=indat$GRIDCODE, length=indat$LENGTHKM, sd=indat$sd)
+for (i in seq(20,100,20))
+{
+  varname <- paste("sd",i,sep="")
+  newname <- paste("dif",i,sep="")
+  pername <- paste("per",i,sep="")
+  sd.df[newname] <- indat[varname] - indat$sd
+  sd.df[pername] <- sd.df[newname]/sd.df$sd
 }
 
 # Prelim analysis ---------------------------------------------------------
