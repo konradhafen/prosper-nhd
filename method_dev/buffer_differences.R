@@ -16,18 +16,43 @@ indat <- filter_all(indat, all_vars(. != -9999))
 orderdat <- indat[order(indat$count),]
 
 
-# Get count columns -------------------------------------------------------
+# Anova of counts ---------------------------------------------------------
 
 keepcols <- grepl("count", names(indat))
 count.df <- indat[,keepcols]
 count.df.melt <- melt(count.df)
-
-
-# Anova of counts ---------------------------------------------------------
-
 ct.aov <- aov(value ~ variable, data=count.df.melt)
 summary(ct.aov)
 TukeyHSD(ct.aov)
+
+
+# Anova of means ----------------------------------------------------------
+
+keepcols <- grepl("mean", names(indat))
+meanaov.df <- indat[,keepcols]
+meanaov.df.melt <- melt(meanaov.df)
+mean.aov <- aov(value ~ variable, data=meanaov.df.melt)
+summary(mean.aov)
+TukeyHSD(mean.aov)
+
+# Anova of medians --------------------------------------------------------
+
+keepcols <- grepl("med", names(indat))
+medaov.df <- indat[,keepcols]
+medaov.df.melt <- melt(medaov.df)
+med.aov <- aov(value ~ variable, data=medaov.df.melt)
+summary(med.aov)
+TukeyHSD(med.aov)
+
+
+# Anova of standard deviation ---------------------------------------------
+
+keepcols <- grepl("sd", names(indat))
+sdaov.df <- indat[,keepcols]
+sdaov.df.melt <- melt(sdaov.df)
+sd.aov <- aov(value ~ variable, data=sdaov.df.melt)
+summary(sd.aov)
+TukeyHSD(sd.aov)
 
 # Difference in counts between catseed and buffer sizes -------------------
 
@@ -39,6 +64,19 @@ for (i in seq(20,100,20))
   pername <- paste("per",i,sep="")
   diff.df[newname] <- indat[varname] - indat$count
   diff.df[pername] <- diff.df[newname]/diff.df$count
+}
+
+
+# Difference in means -----------------------------------------------------
+
+mean.df <- data.frame(gc=indat$GRIDCODE, mean=indat$mean)
+for (i in seq(20,100,20))
+{
+  varname <- paste("mean",i,sep="")
+  newname <- paste("dif",i,sep="")
+  pername <- paste("per",i,sep="")
+  mean.df[newname] <- indat[varname] - indat$mean
+  mean.df[pername] <- mean.df[newname]/mean.df$mean
 }
 
 # Prelim analysis ---------------------------------------------------------
