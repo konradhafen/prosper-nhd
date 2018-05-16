@@ -4,9 +4,12 @@
 rm(list=ls())
 library(dplyr)
 library(reshape2)
+library(ggplot2)
 
 wd <- "E:/konrad/Projects/usgs/prosper-nhd/data/method_dev/csv"
-fn <- "flowline-095-090.csv"
+fn <- "flowline_nd-025-095.csv"
+# fn <- "flowline-099-099.csv"
+# fn <- "flowline_base.csv"
 
 indat <- read.csv(paste(wd, fn,sep="/"))
 indat <- filter_all(indat, all_vars(. != -9999))
@@ -63,9 +66,13 @@ for (i in seq(20,100,20))
   varname <- paste("count",i,sep="")
   newname <- paste("dif",i,sep="")
   pername <- paste("per",i,sep="")
+  diff.df[varname] <- indat[varname]
   diff.df[newname] <- indat[varname] - indat$count
   diff.df[pername] <- diff.df[newname]/diff.df$count
 }
+
+plot(diff.df$count, diff.df$per20)
+plot(diff.df$count, diff.df$count20)
 
 
 # Difference in means -----------------------------------------------------
@@ -80,8 +87,10 @@ for (i in seq(20,100,20))
   mean.df[pername] <- mean.df[newname]/mean.df$mean
 }
 
-mean.lm <- lm(per20 ~ length, data=mean.df)
+mean.lm <- lm((per20) ~ length, data=mean.df)
 summary(mean.lm)
+plot(mean.df$length, (mean.df$per20))
+abline(mean.lm$coefficients[1], mean.lm$coefficients[2])
 
 # difference in sd --------------------------------------------------------
 
