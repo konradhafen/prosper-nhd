@@ -10,6 +10,7 @@ wd <- "E:/konrad/Projects/usgs/prosper-nhd/data/method_dev/csv"
 fn <- "flowline_nd-025-095.csv"
 # fn <- "flowline-099-099.csv"
 # fn <- "flowline_base.csv"
+fn <- "flowline_compare.csv"
 
 indat <- read.csv(paste(wd, fn,sep="/"))
 indat <- filter_all(indat, all_vars(. != -9999))
@@ -111,3 +112,11 @@ hist(diff.df$dif40)
 hist(diff.df$dif60)
 hist(diff.df$dif80)
 hist(diff.df$dif100)
+
+
+# Compare raw buffer to thresholded buffer --------------------------------
+
+#use filename flowline_compare.csv
+indat$ctdif <- indat$count-indat$countd
+indat$dif <- ifelse(indat$maj != indat$majd, 1, 0)
+indat$permdif <- ifelse((indat$maj > 0 & indat$majd < 0) | (indat$maj < 0 & indat$majd > 0), 1, 0)
