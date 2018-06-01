@@ -120,3 +120,4 @@ hist(diff.df$dif100)
 indat$ctdif <- indat$count-indat$countd
 indat$dif <- ifelse(indat$maj != indat$majd, 1, 0)
 indat$permdif <- ifelse((indat$maj > 0 & indat$majd < 0) | (indat$maj < 0 & indat$majd > 0), 1, 0)
+newdata <- subset(indat, indat$permdif == 1)

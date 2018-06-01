@@ -38,7 +38,7 @@ indat.df <- indat.df[, !(names(indat.df) %in% drops)]
 
 #get majoirty stat for each year
 keepcols <- grepl("_maj", names(indat.df))
-keepcols[match("ID", names(indat.df))] <- TRUE
+keepcols[match("id", names(indat.df))] <- TRUE
 maj.df <- indat.df[, keepcols]
 #maj.df[is.na(maj.df)] <- 0
 

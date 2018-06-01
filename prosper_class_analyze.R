@@ -37,15 +37,15 @@ misclass_type <- function(nhdclass, prosperclass)
 
 misclass_type_cat <- function(fcode, catval)
 {
-  if ((fcode == 46006 & catval > 0) | (fcode != 46006 & catval < 0))
+  if (((fcode == 46006 | fcode==55800) & catval > 0) | ((fcode != 46006 | fcode != 55800) & catval < 0))
   {
     return ("Agree")
   }
-  else if (fcode == 46006 & catval < 0)
+  else if ((fcode == 46006 | fcode==55800) & catval < 0)
   {
     return ("NHD wet PROSPER dry")
   }
-  else if (fcode != 46006 & catval > 0)
+  else if ((fcode != 46006 | fcode != 55800) & catval > 0)
   {
     return("NHD dry PROSPER wet")
   }
