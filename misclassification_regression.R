@@ -51,7 +51,7 @@ meltdat <- data.frame(id = numeric(),
                       # FCODE = numeric(),
                       # fac_med = numeric(),
                       fac_mean = numeric(),
-                      # cat_cls = numeric(),
+                      cat_cls = numeric(),
                       dif_mean = numeric(),
                       # nhd_cls = character(),
                       # mc_type = character(),
@@ -72,7 +72,7 @@ for (i in 2004:2016)
   tempdat <- subset(tempdat, tempdat$mc_type != "Invalid")
   tempdat$mc <- ifelse(tempdat$mc_type == "Agree", 0, 1)
   tempdat$year <- i
-  tempdat <- tempdat[, c("id", "fac_mean", "dif_mean", "mc", "year", "cat_cls")]
+  tempdat <- tempdat[, c("id", "fac_mean", "cat_cls", "dif_mean", "mc", "year")]
   meltdat <- rbind(meltdat, tempdat)
   print(nrow(meltdat))
 }
