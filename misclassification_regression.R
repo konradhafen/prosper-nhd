@@ -9,7 +9,11 @@ setwd(wd)
 fn <- "nhd_crb_hr_split_perintap_buf20_fac.csv"
 
 indat <- read_csv(fn)
-
+huc8 <- read_csv("huc8_mask.csv")
+exclude <- as.data.frame(huc8$HUC8_Long)
+huc8s <- substr(indat$REACHCODE, 1, 8)
+condition <- huc8s %in% as.character(exclude$`huc8$HUC8_Long`)
+indat <- indat[!condition,]
 
 # Define functions --------------------------------------------------------
 
@@ -41,7 +45,7 @@ substrRight <- function(x, n){
 # Melted data frame by year -----------------------------------------------
 
 #subset input data based on drainage area
-indat <- subset(indat, indat$fac_mean < 5000000) 
+indat <- subset(indat, indat$count > 2) 
 
 meltdat <- data.frame(id = numeric(),
                       # FCODE = numeric(),
@@ -89,10 +93,31 @@ wrkdat$mc <- ifelse(wrkdat$mc_type == "Agree", 0, 1)
 
 # Logistic regression -----------------------------------------------------
 
-logmodel <- glm(mc ~ abs(dif_mean), data=meltdat, family="binomial")
-logmodel2 <- glm(mc ~ abs(dif_mean + as.factor(year)), data=meltdat, family="binomial")
+meltdat$adif_mean <- abs(meltdat$dif_mean)
+logmodel <- glm(mc ~ adif_mean, data=meltdat, family="binomial")
+logmod <- glm(mc ~ dif_mean, data=meltdat, family="binomial")
+logr.year <- glm(mc ~ year, data=meltdat, family="binomial")
+logmodel2 <- glm(mc ~ abs(dif_mean) + as.factor(year), data=meltdat, family="binomial")
 logmodel3 <- glm(mc ~ abs(dif_mean) + fac_mean, data=meltdat, family="binomial")
+logr.fac <- glm(mc ~ fac_mean, data=meltdat, family="binomial")
 
+
+# Predict values ----------------------------------------------------------
+
+predvalues <- data.frame(adif_mean=seq(0,10,0.1))
+predvalues <- cbind(predvalues, predict(logmodel, newdata=predvalues, type='link', se=T))
+plot(predvalues$adif_mean, predvalues$PredProb)
+
+predvalues <- within(predvalues, {
+  PredictedProb <- plogis(fit)
+  LL <- plogis(fit - (1.96 * se.fit))
+  UL <- plogis(fit + (1.96 * se.fit))
+})
+
+plot(predvalues$adif_mean, predvalues$PredictedProb, type="l", xlab="scPDSI Difference", 
+     ylab="Probability of Classification Difference", ylim=c(0.3,0.4))
+lines(predvalues$adif_mean, predvalues$LL, col="red")
+lines(predvalues$adif_mean, predvalues$UL, col="red")
 
 # Save csv ----------------------------------------------------------------
 
