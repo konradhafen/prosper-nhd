@@ -66,12 +66,13 @@ for (i in 2004:2016)
   tempdat <- as.data.frame(indat[, keeps])
   names(tempdat) <- c("id", "FCODE", "fac_med", "fac_mean", "cat_cls", "dif_mean")
   tempdat <- as.data.frame(subset(tempdat, !is.na(tempdat$cat_cls)))
+  tempdat <- subset(tempdat, abs(tempdat$cat_cls) >= 5)
   tempdat$nhd_cls <- ifelse(tempdat$FCODE == 46006 | tempdat$FCODE == 55800, "wet", "dry")
   tempdat$mc_type <- mapply(misclass_type_cat, tempdat$nhd_cls, tempdat$cat_cls)
   tempdat <- subset(tempdat, tempdat$mc_type != "Invalid")
   tempdat$mc <- ifelse(tempdat$mc_type == "Agree", 0, 1)
   tempdat$year <- i
-  tempdat <- tempdat[, c("id", "fac_mean", "dif_mean", "mc", "year")]
+  tempdat <- tempdat[, c("id", "fac_mean", "dif_mean", "mc", "year", "cat_cls")]
   meltdat <- rbind(meltdat, tempdat)
   print(nrow(meltdat))
 }
@@ -115,7 +116,7 @@ predvalues <- within(predvalues, {
 })
 
 plot(predvalues$adif_mean, predvalues$PredictedProb, type="l", xlab="scPDSI Difference", 
-     ylab="Probability of Classification Difference", ylim=c(0.3,0.4))
+     ylab="Probability of Classification Difference")
 lines(predvalues$adif_mean, predvalues$LL, col="red")
 lines(predvalues$adif_mean, predvalues$UL, col="red")
 
