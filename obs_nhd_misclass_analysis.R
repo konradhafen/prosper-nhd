@@ -33,6 +33,21 @@ misclass <- function(fcode, class)
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
 
 
+
+# Correlation -------------------------------------------------------------
+
+names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
+cordat <- indat[,names]
+chart.Correlation(cordat, histogram=T)
+
 # Model misclassifications ------------------------------------------------
 
 logr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
+logr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
+logr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
+
+
+# Predict with model ------------------------------------------------------
+
+preds <- predict(logr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
+plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25))
