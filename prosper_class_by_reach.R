@@ -77,9 +77,9 @@ maj.df$pwet <- maj.df$pwet/13.0
 # Add new calculations to original data -----------------------------------
 
 indat.df <- cbind(indat.df, maj.df[c("ctwet", "ctdry", "switch", "ctswitch", "pwet")])
-keep <- c("ID", "ctwet", "ctdry","switch", "ctswitch", "pwet")
+keep <- c("id", "ctwet", "ctdry","switch", "ctswitch", "pwet")
 merge.df <- indat.df[keep]
-keep <- c("ID", "FCODE", "ctwet", "ctdry","switch", "ctswitch", "pwet")
+keep <- c("id", "FCODE", "ctwet", "ctdry","switch", "ctswitch", "pwet")
 fcode.df <- indat.df[keep]
 write_csv(merge.df, outcsvfile)
 write_csv(fcode.df, outcsv_fcode)

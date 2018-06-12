@@ -59,7 +59,7 @@ misclass_type_cat <- function(fcode, catval)
 # Subset to perennial/intermittnet only and classify overall --------------
 
 pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==55800 | indat$FCODE==46003 | indat$FCODE == 46007)
-pidat$nclass <- ifelse(pidat$FCODE==46006 | indat$FCODE==55800, "Perennial", "Intermittent")
+pidat$nclass <- ifelse(pidat$FCODE==46006 | pidat$FCODE==55800, "Perennial", "Intermittent")
 
 #classify reaches as perennial or intermittent based on pwet
 
@@ -78,7 +78,7 @@ pidat.melt <- melt(pidat)
 # Different cutoff values -------------------------------------------------
 
 pidat <- subset(pidat, !is.na(pidat$pwet))
-nclass <- ifelse(pidat$FCODE==46006 | indat$FCODE==55800, "Perennial", "Intermittent")
+nclass <- ifelse(pidat$FCODE==46006 | pidat$FCODE==55800, "Perennial", "Intermittent")
 cutoffs <- seq (0.5, 1.0, 0.05)
 df <- data.frame()
 print(nrow(pidat))
@@ -106,6 +106,9 @@ plot(df$cutoff, df$mc, type="l", xlab="Perennial cutoff value", ylab="Proportion
      ylim=c(0, 0.5))
 lines(df$cutoff, df$nwpd, col="red")
 lines(df$cutoff, df$ndpw, col="blue")
+legend("topright", legend=c("Total disagreement", "NHD perennial PROSPER dry", "NHD intermittent PROSPER wet"),
+       lwd = c(2,2,2),
+       col = c("black", "red", "blue"))
 
 # Save to csv -------------------------------------------------------------
 
