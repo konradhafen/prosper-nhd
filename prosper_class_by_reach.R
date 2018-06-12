@@ -15,6 +15,8 @@ fin <- "bull_trout_habitat_buffer_epsg5070.shp"
 fout <- "bt_out.shp"
 lyr <- "bull_trout_habitat_buffer_epsg5070"
 outlyr <- "bt_out"
+wd <- "E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv"
+fn <- "nhd_crb_hr_split_perintap_buf20_fac.csv"
 
 #read shapefile (buffer polygons of MR NHD)
 #indat <- readOGR(wd, lyr)
@@ -22,8 +24,15 @@ outlyr <- "bt_out"
 csvfile <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat.csv"
 outcsvfile <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_out.csv"
 outcsv_fcode <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_fcode.csv"
-outcsv_all <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_hr_buf20_cat_maj.csv"
-indat.df <- read_csv(csvfile)
+outcsv_all <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv/nhd_crb_hr_split_perintap_buf20_fac_catout.csv"
+setwd(wd)
+indat.df <- read_csv(fn)
+
+huc8 <- read_csv("huc8_mask.csv")
+exclude <- as.data.frame(huc8$HUC8_Long)
+huc8s <- substr(indat.df$REACHCODE, 1, 8)
+condition <- huc8s %in% as.character(exclude$`huc8$HUC8_Long`)
+indat.df <- indat.df[!condition,]
 
 # Prep data ---------------------------------------------------------------
 

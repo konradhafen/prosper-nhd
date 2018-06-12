@@ -9,7 +9,7 @@ library(tidyverse)
 wd <- "E:/konrad/Projects/usgs/prosper-nhd/data/outputs/csv"
 fn <- "nhd_mr_class_buf20.csv" #for all reaches
 fn <- "nhd_mr_class_buf20_huc810.csv" #for huc10s with high disagreement
-fn <- "nhd_hr_buf20_cat_fcode.csv"
+fn <- "nhd_crb_hr_split_perintap_buf20_fac_catout.csv"
 
 indat <- read_csv(paste(wd,fn,sep="/"))
 fn <- "nhd_hr_buf20_cat_maj.csv"
@@ -58,21 +58,54 @@ misclass_type_cat <- function(fcode, catval)
 
 # Subset to perennial/intermittnet only and classify overall --------------
 
-pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==46003 | indat$FCODE == 46007)
-pidat$nclass <- ifelse(pidat$FCODE==46006, "Perennial", "Intermittent")
+pidat <- subset(indat, indat$FCODE==46006 | indat$FCODE==55800 | indat$FCODE==46003 | indat$FCODE == 46007)
+pidat$nclass <- ifelse(pidat$FCODE==46006 | indat$FCODE==55800, "Perennial", "Intermittent")
 
 #classify reaches as perennial or intermittent based on pwet
 
 #cutoff proportion for perennial
 cutoff <- 0.75
+pidat <- subset(pidat, !is.na(pidat$pwet))
 pidat$pclass <- ifelse(pidat$pwet >= cutoff, "Wet", "Dry")
 #run functions section first
 pidat$dclass <- mapply(misclass_type, pidat$nclass, pidat$pclass)
 
 #melt
-pidat.melt <- melt(pidat, "ID", c("nclass", "pclass", "dclass"))
+pidat.melt <- melt(pidat, "id", c("nclass", "pclass", "dclass"))
 pidat.melt <- melt(pidat)
 
+
+# Different cutoff values -------------------------------------------------
+
+pidat <- subset(pidat, !is.na(pidat$pwet))
+nclass <- ifelse(pidat$FCODE==46006 | indat$FCODE==55800, "Perennial", "Intermittent")
+cutoffs <- seq (0.5, 1.0, 0.05)
+df <- data.frame()
+print(nrow(pidat))
+print(length(pidat$pwet))
+print(length(nclass))
+
+for (cutoff in cutoffs)
+{
+  print(cutoff)
+  pclass <- ifelse(pidat$pwet >= cutoff, "Wet", "Dry")
+  dclass <- mapply(misclass_type, nclass, pclass)
+  print(length(pclass))
+  print(length(dclass))
+  mc=ifelse(dclass=="Agree", 0, 1)
+  df <- rbind(df, data.frame(cutoff=cutoff, mc=(sum(mc, na.rm=T)/length(mc)), 
+                             nwpd=sum(dclass == "NHD wet PROSPER dry")/length(dclass), 
+                             ndpw=sum(dclass == "NHD dry PROSPER wet")/length(dclass)))
+  print(df)
+}
+
+
+# Plot results ------------------------------------------------------------
+
+plot(df$cutoff, df$mc, type="l", xlab="Perennial cutoff value", ylab="Proportion of disagreeing reaches", 
+     ylim=c(0, 0.5))
+lines(df$cutoff, df$nwpd, col="red")
+lines(df$cutoff, df$ndpw, col="blue")
 
 # Save to csv -------------------------------------------------------------
 

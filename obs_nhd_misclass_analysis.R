@@ -9,6 +9,7 @@ fn <- "obs_hr_nhd_scpdsi.csv"
 library(tidyverse)
 
 indat <- as.data.frame(read_csv(fn))
+indat <- indat[indat$ppt_pt > 0,]
 
 # Functions ---------------------------------------------------------------
 
@@ -28,9 +29,22 @@ misclass <- function(fcode, class)
   }
 }
 
+nhdclass <- function(fcode)
+{
+  if (fcode == 46006 | fcode == 55800)
+  {
+    return('Wet')
+  }
+  else
+  {
+    return('Dry')
+  }
+}
+
 # Identify misclassifications ---------------------------------------------
 
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
+indat$nhdclass <- mapply(nhdclass, indat$FCODE)
 
 
 
@@ -42,12 +56,16 @@ chart.Correlation(cordat, histogram=T)
 
 # Model misclassifications ------------------------------------------------
 
+logr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
 logr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
 logr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
 logr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
+logr.pdsiclass <- glm(mc ~ pdsi_mean + nhdclass, data=indat, family="binomial")
 
 
 # Predict with model ------------------------------------------------------
 
 preds <- predict(logr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25))
+
+predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Wet', 'Dry')), type="response")
