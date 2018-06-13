@@ -48,12 +48,12 @@ substrRight <- function(x, n){
 indat <- subset(indat, indat$count > 2) 
 
 meltdat <- data.frame(id = numeric(),
-                      # FCODE = numeric(),
+                      FCODE = numeric(),
                       # fac_med = numeric(),
                       fac_mean = numeric(),
                       cat_cls = numeric(),
                       dif_mean = numeric(),
-                      # nhd_cls = character(),
+                      nhd_cls = character(),
                       # mc_type = character(),
                       mc = numeric(),
                       year = numeric())
@@ -72,30 +72,36 @@ for (i in 2004:2016)
   tempdat <- subset(tempdat, tempdat$mc_type != "Invalid")
   tempdat$mc <- ifelse(tempdat$mc_type == "Agree", 0, 1)
   tempdat$year <- i
-  tempdat <- tempdat[, c("id", "fac_mean", "cat_cls", "dif_mean", "mc", "year")]
+  tempdat <- tempdat[, c("id", "FCODE", "fac_mean", "cat_cls", "nhd_cls", "dif_mean", "mc", "year")]
   meltdat <- rbind(meltdat, tempdat)
   print(nrow(meltdat))
 }
 rm(tempdat)
 rm(indat)
 
-# Subset and calculate misclassifications ---------------------------------
 
-keeps <- c("id", "FCODE", "16_maj", "16_mean")
-wrkdat <- indat[, keeps]
-names(wrkdat) <- c("id", "FCODE", "X16_maj", "X16_mean")
-wrkdat <- as.data.frame(subset(wrkdat, !is.na(wrkdat$X16_maj)))
-wrkdat$nhd_cls <- ifelse(wrkdat$FCODE == 46006 | wrkdat$FCODE == 55800, "wet", "dry")
+# Subset based on scpdsi difference ---------------------------------------
 
-wrkdat$mc_type <- mapply(misclass_type_cat, wrkdat$nhd_cls, wrkdat$X16_maj)
-wrkdat <- subset(wrkdat, wrkdat$mc_type != "Invalid")
-wrkdat$mc <- ifelse(wrkdat$mc_type == "Agree", 0, 1)
+meltdat.pdsi <- subset(meltdat, abs(meltdat$dif_mean) < 0.5)
+meltdat.pdsi$adif_mean <- abs(meltdat.pdsi$dif_mean)
+
+logr.dif <- glm(mc ~ adif_mean, data=meltdat.pdsi, family="binomial")
+logr.year <- glm(mc ~ as.factor(year), data=meltdat.pdsi, family="binomial")
+logr.cat <- glm(mc ~ as.factor(cat_cls), data=meltdat.pdsi, family="binomial")
+logr.fac <- glm(mc ~ fac_mean, data=meltdat.pdsi, family="binomial")
+logr.fcode <- glm(mc ~ as.factor(FCODE), data=meltdat.pdsi, family="binomial")
+
+pred.fcode <- cbind(data.frame(FCODE=c(46003,46006,46007,55800)),
+                    predict(logr.fcode, newdata=data.frame(FCODE=c(46003,46006,46007,55800)),
+                            type="response"))
 
 
 # Logistic regression -----------------------------------------------------
 
 meltdat$adif_mean <- abs(meltdat$dif_mean)
 logr.dif <- glm(mc ~ adif_mean, data=meltdat, family="binomial")
+logr.fcode <- glm(mc ~ as.factor(FCODE), data=meltdat, family="binomial")
+logr.diffcode <- glm(mc ~ adif_mean + as.factor(FCODE), data=meltdat, family="binomial")
 logr.year <- glm(mc ~ year, data=meltdat, family="binomial")
 logr.cat <- glm(mc ~ as.factor(cat_cls), data=meltdat, family="binomial")
 logr.difyr <- glm(mc ~ adif_mean + as.factor(year), data=meltdat, family="binomial")
