@@ -101,6 +101,9 @@ pred.fcode <- cbind(data.frame(FCODE=c(46003,46006,46007,55800)),
 meltdat$adif_mean <- abs(meltdat$dif_mean)
 logr.dif <- glm(mc ~ adif_mean, data=meltdat, family="binomial")
 logr.fcode <- glm(mc ~ as.factor(FCODE), data=meltdat, family="binomial")
+logr.nhd <- glm(mc ~ nhd_cls, data=meltdat, family="binomial")
+logr.nhdyear <- glm(mc ~ nhd_cls + as.factor(year), data=meltdat, family="binomial")
+logr.difnhd <- glm(mc ~ adif_mean + nhd_cls, data=meltdat, family="binomial")
 logr.diffcode <- glm(mc ~ adif_mean + as.factor(FCODE), data=meltdat, family="binomial")
 logr.year <- glm(mc ~ year, data=meltdat, family="binomial")
 logr.cat <- glm(mc ~ as.factor(cat_cls), data=meltdat, family="binomial")
@@ -145,6 +148,18 @@ plot(predvalues$fac_mean, predvalues$PredictedProb, type="l", xlab="Flow Accumul
 lines(predvalues$fac_mean, predvalues$LL, col="red")
 lines(predvalues$fac_mean, predvalues$UL, col="red")
 
+
+
+# Predict values FCODE ----------------------------------------------------
+
+fcode.df <- data.frame(FCODE=c(46003, 46006, 46007, 55800))
+predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type='response'))
+
+cls.df <- data.frame(nhd_cls=c("wet","dry"))
+predcls <- cbind(cls.df, predict(logr.nhd, newdata=cls.df, type='response'))
+
+clsyear.df <- data.frame(nhd_cls=c(rep("wet", 13), rep("dry", 13)), year=(rep(seq(2004,2016,1),2)))
+predclsyear <- cbind(clsyear.df, predict(logr.nhdyear, newdata=clsyear.df, type='response'))
 
 # Predict value scPDSI dif and FAC ----------------------------------------
 
