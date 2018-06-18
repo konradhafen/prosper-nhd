@@ -156,22 +156,24 @@ tempdat <- allobs[allobs$Year>0 & allobs$Month>0,]
 
 monthdat <- tempdat %>% group_by(Month) %>% summarise (ct=n(), ndow=sum(mctype=="NHD dry Observation wet"),
                                                        nwod=sum(mctype=="NHD wet Observation dry"))
-monthdat$pndow <- monthdat$ndow/monthdat$ct*100
-monthdat$pnwod <- monthdat$nwod/monthdat$ct*100
+monthdat$pndow <- monthdat$ndow/monthdat$ct
+monthdat$pnwod <- monthdat$nwod/monthdat$ct
 monthdat.sub <- monthdat[,c("Month","pndow","pnwod")]
 n <- melt(cbind(monthdat$ndow, monthdat$nwod))
 colnames(n) <- c("var1", "var2", "count")
 monthdat.melt <- cbind(melt(monthdat.sub, id=c("Month")), n$count)
 monthdat.melt$variable <- factor(monthdat.melt$variable, levels=c("pndow", "pnwod"), 
-                                 labels=c("NHD dry Observation Wet", "NHD wet Observation Dry"))
+                                 labels=c("NHD intermittent Observation wet", "NHD perennial Observation dry"))
 
-monthdat.melt$pos <- c(rep(7.5,12), rep(0.75,12))
+monthdat.melt$pos <- c(rep(0.075,12), rep(0.0075,12))
 
 ggplot(monthdat.melt, aes(as.factor(Month))) +
   geom_bar(aes(x=Month, y=value, fill=variable), stat="identity") + 
   scale_fill_manual(values=c("#669BFF","#F9766E")) +
   geom_text(aes(x=Month, y=pos, label=n$count)) +
   scale_x_continuous(breaks=seq(1,12,1)) +
-  labs(x="Year", y="Percent different") +
-  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank())
+  scale_y_continuous(labels=scales::percent) +
+  labs(x="Month", y="Percent of total field observations") +
+  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank()) +
+  ggtitle("Difference between NHD Classifications and Field Observations")
 
