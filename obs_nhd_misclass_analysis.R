@@ -7,6 +7,8 @@ setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 fn <- "obs_hr_nhd_scpdsi.csv"
 
 library(tidyverse)
+library(reshape2)
+library(plyr)
 
 indat <- as.data.frame(read_csv(fn))
 indat <- indat[indat$ppt_pt > 0,]
@@ -75,6 +77,7 @@ misclass_type <- function(nhdclass, obsclass)
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
 indat$nhdclass <- mapply(nhdclass, indat$FCODE)
 indat$wet <- ifelse(indat$nhdclass=="Wet", 1, 0)
+indat$mctype <- mapply(misclass_type, indat$nhdclass, indat$Category)
 
 allobs$mc <- mapply(misclass, allobs$FCODE, allobs$Category)
 allobs$nhdclass <- mapply(nhdclass, allobs$FCODE)
@@ -98,12 +101,14 @@ chart.Correlation(cordat, histogram=T)
 
 # Model misclassifications ------------------------------------------------
 
+moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
 logr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
 logr.fcode <- glm(mc ~ as.factor(FCODE), data=indat, family="binomial")
 logr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
 logr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
 logr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
 logr.pdsiclass <- glm(mc ~ pdsi_mean + nhdclass, data=indat, family="binomial")
+logr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="binomial")
 
 
 # Predict with model ------------------------------------------------------
@@ -113,13 +118,60 @@ plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad c
 
 predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Wet', 'Dry')), type="response")
 
+fcode.df <- data.frame(FCODE=c(46003, 46006, 46007, 55800))
+predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="response"))
+
 
 # Plot misclassifications by month ----------------------------------------
 
+plotdat <- allobs
+plotdat <- allobs[allobs$Month>5 & allobs$Month<11 & allobs$Year>0,]
+
+ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
+  geom_bar(aes(fill=mctype)) +
+  scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
+  labs(x="Month", y="Observation count", fill="Misclassification") +
+  theme(legend.position = c(1,1), legend.justification = c(1,1))
+
+ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
+  geom_bar(aes(fill=mctype)) +
+  labs(x="Month", y="Observations") +
+  facet_wrap(~FCODE, ncol=2) 
+  #geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
+  #scale_y_continuous(labels=scales::percent)
+
+ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~FCODE, ncol=2)
+
+ggplot(plotdat[plotdat$Year>0,], aes(Year)) + 
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
+  scale_y_continuous(labels=scales::percent)
 
 
-ggplot(allobs[allobs$Month>0,], aes(as.factor(Month))) + 
-  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype))
+# Aggregate by month ------------------------------------------------------
 
-ggplot(allobs[allobs$Year>0,], aes(Year)) + 
-  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype))
+tempdat <- allobs[allobs$Year>0 & allobs$Month>0,]
+
+monthdat <- tempdat %>% group_by(Month) %>% summarise (ct=n(), ndow=sum(mctype=="NHD dry Observation wet"),
+                                                       nwod=sum(mctype=="NHD wet Observation dry"))
+monthdat$pndow <- monthdat$ndow/monthdat$ct*100
+monthdat$pnwod <- monthdat$nwod/monthdat$ct*100
+monthdat.sub <- monthdat[,c("Month","pndow","pnwod")]
+n <- melt(cbind(monthdat$ndow, monthdat$nwod))
+colnames(n) <- c("var1", "var2", "count")
+monthdat.melt <- cbind(melt(monthdat.sub, id=c("Month")), n$count)
+monthdat.melt$variable <- factor(monthdat.melt$variable, levels=c("pndow", "pnwod"), 
+                                 labels=c("NHD dry Observation Wet", "NHD wet Observation Dry"))
+
+monthdat.melt$pos <- c(rep(7.5,12), rep(0.75,12))
+
+ggplot(monthdat.melt, aes(as.factor(Month))) +
+  geom_bar(aes(x=Month, y=value, fill=variable), stat="identity") + 
+  scale_fill_manual(values=c("#669BFF","#F9766E")) +
+  geom_text(aes(x=Month, y=pos, label=n$count)) +
+  scale_x_continuous(breaks=seq(1,12,1)) +
+  labs(x="Year", y="Percent different") +
+  theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank())
+
