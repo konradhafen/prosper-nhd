@@ -11,6 +11,8 @@ library(tidyverse)
 indat <- as.data.frame(read_csv(fn))
 indat <- indat[indat$ppt_pt > 0,]
 
+allobs <-as.data.frame(read_csv("all_obs_hr_nhd.csv"))
+
 # Functions ---------------------------------------------------------------
 
 misclass <- function(fcode, class)
@@ -41,14 +43,52 @@ nhdclass <- function(fcode)
   }
 }
 
+misclass_type <- function(nhdclass, obsclass)
+{
+  if (nhdclass == obsclass)
+  {
+    return ("Agree")
+  }
+  
+  else
+  {
+    if (nhdclass == "Wet" & obsclass =="Dry")
+    {
+      return ("NHD wet Observation dry")
+    }
+    
+    else if (nhdclass == "Dry" & obsclass =="Wet")
+    {
+      return ("NHD dry Observation wet")
+    }
+    
+    else
+    {
+      return ("Invalid")
+    }
+    
+  }
+}
+
 # Identify misclassifications ---------------------------------------------
 
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
 indat$nhdclass <- mapply(nhdclass, indat$FCODE)
+indat$wet <- ifelse(indat$nhdclass=="Wet", 1, 0)
+
+allobs$mc <- mapply(misclass, allobs$FCODE, allobs$Category)
+allobs$nhdclass <- mapply(nhdclass, allobs$FCODE)
+allobs$mctype <- mapply(misclass_type, allobs$nhdclass, allobs$Category)
+allobsmc <- subset(allobs, allobs$mc == 1)
 
 perdat <- subset(indat, indat$nhdclass =='Wet')
 intdat <- subset(indat, indat$nhdclass =='Dry')
 
+agnhd <- indat %>% group_by(id) %>% summarise(fcode=mean(FCODE))
+agnhd$nhdclass <- mapply(nhdclass, agnhd$fcode)
+agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
+agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
+agdat$mc <- ifelse((agdat$nhdclass=="Wet"&agdat$wet<1) | (agdat$nhdclass=="Dry"&agdat$wet==1), 1, 0)
 
 # Correlation -------------------------------------------------------------
 
@@ -72,3 +112,14 @@ preds <- predict(logr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad check year", ylab="Probability of misclassification")
 
 predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Wet', 'Dry')), type="response")
+
+
+# Plot misclassifications by month ----------------------------------------
+
+
+
+ggplot(allobs[allobs$Month>0,], aes(as.factor(Month))) + 
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype))
+
+ggplot(allobs[allobs$Year>0,], aes(Year)) + 
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype))
