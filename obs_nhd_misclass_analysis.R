@@ -125,7 +125,23 @@ predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="respons
 # Plot misclassifications by month ----------------------------------------
 
 plotdat <- allobs
-plotdat <- allobs[allobs$Month>5 & allobs$Month<11 & allobs$Year>0,]
+plotdat <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
+
+#by type
+ggplot(plotdat, aes(mctype)) +
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
+  scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
+  scale_y_continuous(labels=scales::percent, breaks=seq(0,0.9,0.1)) +
+  labs(x="", y="Percent of observations") +
+  theme(legend.position = "none")
+
+#by year
+ggplot(plotdat, aes((Year))) +
+  geom_bar(aes(fill=mctype)) + 
+  scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
+  scale_x_continuous(breaks=seq(1976, 2016, 2)) +
+  labs(x="Year", y="Observation count", fill="Misclassification") +
+  theme(legend.position = c(1,1), legend.justification = c(1,1))
 
 ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
