@@ -7,8 +7,8 @@ setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 fn <- "obs_hr_nhd_scpdsi.csv"
 
 library(tidyverse)
-library(reshape2)
-library(plyr)
+#library(reshape2)
+#library(plyr)
 
 indat <- as.data.frame(read_csv(fn))
 indat <- indat[indat$ppt_pt > 0,]
@@ -127,6 +127,9 @@ predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="respons
 plotdat <- allobs
 plotdat <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
 
+#summary of plot data
+plotsummary <- plotdat %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat))
+
 #by type
 ggplot(plotdat, aes(mctype)) +
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
@@ -134,6 +137,27 @@ ggplot(plotdat, aes(mctype)) +
   scale_y_continuous(labels=scales::percent, breaks=seq(0,0.9,0.1)) +
   labs(x="", y="Percent of observations") +
   theme(legend.position = "none")
+
+#by type, exclude "NHD dry Observation wet" before August
+plotdat2 <- plotdat[!(plotdat$mctype=="NHD dry Observation wet" & plotdat$Month<8),]
+plotsummary2 <- plotdat2 %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat2))
+ggplot(plotdat2, aes(mctype)) +
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
+  scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
+  scale_y_continuous(labels=scales::percent, breaks=seq(0,0.9,0.1)) +
+  labs(x="", y="Percent of observations") +
+  theme(legend.position = "none") +
+  ggtitle("Excluding disagreement on NHD intermittent streams before August")
+
+plotdat3 <- plotdat[!(plotdat$Category=="wet" & plotdat$Month<8),]
+plotsummary3 <- plotdat3 %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat3))
+ggplot(plotdat3, aes(mctype)) +
+  geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
+  scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
+  scale_y_continuous(labels=scales::percent, breaks=seq(0,0.9,0.1)) +
+  labs(x="", y="Percent of observations") +
+  theme(legend.position = "none") +
+  ggtitle("Excluding all 'wet' observations before August")
 
 #by year
 ggplot(plotdat, aes((Year))) +
