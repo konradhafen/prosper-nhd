@@ -110,6 +110,11 @@ chart.Correlation(cordat, histogram=T)
 # Model misclassifications ------------------------------------------------
 
 moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
+
+#exclude wet observations before August
+moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+
+#REMEMBER: coefficients are log odds
 logr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
 logr.fcode <- glm(mc ~ as.factor(FCODE), data=indat, family="binomial")
 logr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
