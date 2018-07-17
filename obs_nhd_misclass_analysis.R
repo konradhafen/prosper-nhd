@@ -37,29 +37,29 @@ nhdclass <- function(fcode)
 {
   if (fcode == 46006 | fcode == 55800)
   {
-    return('Wet')
+    return('Perennial')
   }
   else
   {
-    return('Dry')
+    return('Intermittent')
   }
 }
 
 misclass_type <- function(nhdclass, obsclass)
 {
-  if (nhdclass == obsclass)
+  if ((nhdclass == "Perennial" & obsclass == "Wet") | (nhdclass == "Intermittent" & obsclass == "Dry"))
   {
     return ("Agree")
   }
   
   else
   {
-    if (nhdclass == "Wet" & obsclass =="Dry")
+    if (nhdclass == "Perennial" & obsclass =="Dry")
     {
       return ("NHD wet Observation dry")
     }
     
-    else if (nhdclass == "Dry" & obsclass =="Wet")
+    else if (nhdclass == "Intermittent" & obsclass =="Wet")
     {
       return ("NHD dry Observation wet")
     }
@@ -76,7 +76,7 @@ misclass_type <- function(nhdclass, obsclass)
 
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
 indat$nhdclass <- mapply(nhdclass, indat$FCODE)
-indat$wet <- ifelse(indat$nhdclass=="Wet", 1, 0)
+indat$wet <- ifelse(indat$nhdclass=="Perennial", 1, 0)
 indat$mctype <- mapply(misclass_type, indat$nhdclass, indat$Category)
 
 allobs$mc <- mapply(misclass, allobs$FCODE, allobs$Category)
@@ -84,14 +84,14 @@ allobs$nhdclass <- mapply(nhdclass, allobs$FCODE)
 allobs$mctype <- mapply(misclass_type, allobs$nhdclass, allobs$Category)
 allobsmc <- subset(allobs, allobs$mc == 1)
 
-perdat <- subset(indat, indat$nhdclass =='Wet')
-intdat <- subset(indat, indat$nhdclass =='Dry')
+perdat <- subset(indat, indat$nhdclass =='Perennial')
+intdat <- subset(indat, indat$nhdclass =='Intermittent')
 
 agnhd <- indat %>% group_by(id) %>% summarise(fcode=mean(FCODE))
 agnhd$nhdclass <- mapply(nhdclass, agnhd$fcode)
 agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
 agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
-agdat$mc <- ifelse((agdat$nhdclass=="Wet"&agdat$wet<1) | (agdat$nhdclass=="Dry"&agdat$wet==1), 1, 0)
+agdat$mc <- ifelse((agdat$nhdclass=="Perennial"&agdat$wet<1) | (agdat$nhdclass=="Intermittent"&agdat$wet==1), 1, 0)
 
 agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
 
@@ -118,7 +118,7 @@ logr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="bin
 preds <- predict(logr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad check year", ylab="Probability of misclassification")
 
-predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Wet', 'Dry')), type="response")
+predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Perennial', 'Intermittent')), type="response")
 
 fcode.df <- data.frame(FCODE=c(46003, 46006, 46007, 55800))
 predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="response"))
