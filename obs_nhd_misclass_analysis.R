@@ -15,6 +15,10 @@ indat <- indat[indat$ppt_pt > 0,]
 
 allobs <-as.data.frame(read_csv("all_obs_hr_nhd.csv"))
 
+# remove observation where FCODE may be incorrect
+indat <- indat[indat$FID != 11120]
+allobs <- allobs[allobs$FID != 8501]
+
 # Functions ---------------------------------------------------------------
 
 misclass <- function(fcode, class)
@@ -126,8 +130,10 @@ predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="respons
 
 # Plot misclassifications by month ----------------------------------------
 
-plotdat <- allobs
-plotdat <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
+#plotdat <- allobs[!(allobs$Category=="Wet" & allobs$Month == 0),]
+plotdat.year <- allobs[allobs$Year > 0,]
+plotdat.date <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
+plotdat.dry <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
 
 #summary of plot data
 plotsummary <- plotdat %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat))
@@ -141,7 +147,7 @@ ggplot(plotdat, aes(mctype)) +
   theme(legend.position = "none")
 
 #by type, exclude "NHD dry Observation wet" before August
-plotdat2 <- plotdat[!(plotdat$mctype=="NHD dry Observation wet" & plotdat$Month<8),]
+plotdat2 <- allobs[!(allobs$mctype=="NHD dry Observation wet" & allobs$Month<8),]
 plotsummary2 <- plotdat2 %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat2))
 ggplot(plotdat2, aes(mctype)) +
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
@@ -151,9 +157,8 @@ ggplot(plotdat2, aes(mctype)) +
   theme(legend.position = "none") +
   ggtitle("Excluding disagreement on NHD intermittent streams before August")
 
-plotdat3 <- plotdat[!(plotdat$Category=="Wet" & plotdat$Month<8),]
 plotsummary3 <- plotdat3 %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat3))
-ggplot(plotdat3, aes(mctype)) +
+ggplot(plotdat.dry, aes(mctype)) +
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
   scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
   scale_y_continuous(labels=scales::percent, breaks=seq(0,0.9,0.1)) +
@@ -162,7 +167,7 @@ ggplot(plotdat3, aes(mctype)) +
   ggtitle("Excluding all 'wet' observations before August")
 
 #by year
-ggplot(plotdat, aes((Year))) +
+ggplot(plotdat.year, aes((Year))) +
   geom_bar(aes(fill=mctype)) + 
   scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
   scale_x_continuous(breaks=seq(1976, 2016, 2)) +
@@ -170,14 +175,14 @@ ggplot(plotdat, aes((Year))) +
   theme(legend.position = c(1,1), legend.justification = c(1,1))
 
 #by month
-ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
+ggplot(plotdat.date, aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
   scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
   labs(x="Month", y="Observation count", fill="Misclassification") +
   theme(legend.position = c(1,1), legend.justification = c(1,1))
 
 #by month and fcode
-ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
+ggplot(plotdat.date, aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
   labs(x="Month", y="Observations") +
   facet_wrap(~FCODE, ncol=2) 
@@ -191,7 +196,7 @@ ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) +
   facet_wrap(~FCODE, ncol=2)
 
 #by year percentages
-ggplot(plotdat[plotdat$Year>0,], aes(Year)) + 
+ggplot(plotdat.year, aes(Year)) + 
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
   scale_y_continuous(labels=scales::percent)
 
