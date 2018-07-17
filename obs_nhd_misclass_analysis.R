@@ -4,6 +4,8 @@
 rm(list=ls())
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
+
+#contains info from points where quad data a climate data exist
 fn <- "obs_hr_nhd_scpdsi.csv"
 
 library(tidyverse)
@@ -16,8 +18,8 @@ indat <- indat[indat$ppt_pt > 0,]
 allobs <-as.data.frame(read_csv("all_obs_hr_nhd.csv"))
 
 # remove observation where FCODE may be incorrect
-indat <- indat[indat$FID != 11120]
-allobs <- allobs[allobs$FID != 8501]
+indat <- indat[indat$FID != 11120,]
+allobs <- allobs[allobs$FID != 8501,]
 
 # Functions ---------------------------------------------------------------
 
@@ -134,6 +136,19 @@ predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="respons
 plotdat.year <- allobs[allobs$Year > 0,]
 plotdat.date <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
 plotdat.dry <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
+
+#summary tables
+table.all <- table(allobs$nhdclass, allobs$Category)
+prop.table(table.all) * 100
+
+table.year <- table(plotdat.year$nhdclass, plotdat.year$Category)
+prop.table(table.year) * 100
+
+table.date <- table(plotdat.date$nhdclass, plotdat.date$Category)
+prop.table(table.date) * 100
+
+table.dry <- table(plotdat.dry$nhdclass, plotdat.dry$Category)
+prop.table(table.dry) * 100
 
 #summary of plot data
 plotsummary <- plotdat %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat))
