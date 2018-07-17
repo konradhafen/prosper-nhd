@@ -93,6 +93,8 @@ agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
 agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
 agdat$mc <- ifelse((agdat$nhdclass=="Wet"&agdat$wet<1) | (agdat$nhdclass=="Dry"&agdat$wet==1), 1, 0)
 
+agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
+
 # Correlation -------------------------------------------------------------
 
 names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
@@ -149,7 +151,7 @@ ggplot(plotdat2, aes(mctype)) +
   theme(legend.position = "none") +
   ggtitle("Excluding disagreement on NHD intermittent streams before August")
 
-plotdat3 <- plotdat[!(plotdat$Category=="wet" & plotdat$Month<8),]
+plotdat3 <- plotdat[!(plotdat$Category=="Wet" & plotdat$Month<8),]
 plotsummary3 <- plotdat3 %>% group_by(mctype) %>% summarize(per=n()/nrow(plotdat3))
 ggplot(plotdat3, aes(mctype)) +
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) +
@@ -167,12 +169,14 @@ ggplot(plotdat, aes((Year))) +
   labs(x="Year", y="Observation count", fill="Misclassification") +
   theme(legend.position = c(1,1), legend.justification = c(1,1))
 
+#by month
 ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
   scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
   labs(x="Month", y="Observation count", fill="Misclassification") +
   theme(legend.position = c(1,1), legend.justification = c(1,1))
 
+#by month and fcode
 ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
   labs(x="Month", y="Observations") +
@@ -180,11 +184,13 @@ ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) +
   #geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
   #scale_y_continuous(labels=scales::percent)
 
+#by month and fcode, percentages
 ggplot(plotdat[plotdat$Month>0,], aes(as.factor(Month))) + 
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
   scale_y_continuous(labels=scales::percent) +
   facet_wrap(~FCODE, ncol=2)
 
+#by year percentages
 ggplot(plotdat[plotdat$Year>0,], aes(Year)) + 
   geom_bar(aes(y=(..count..)/sum(..count..), fill=mctype)) + 
   scale_y_continuous(labels=scales::percent)
