@@ -102,6 +102,12 @@ agdat$mc <- ifelse((agdat$nhdclass=="Perennial"&agdat$wet<1) | (agdat$nhdclass==
 
 agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
 
+
+# Save csv ----------------------------------------------------------------
+
+writeobs <- allobs[,c("FID", "nhdclass", "mc", "mctype")]
+write_csv(writeobs, "misclassifications_obs_nhd.csv")
+
 # Correlation -------------------------------------------------------------
 
 names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
@@ -116,24 +122,24 @@ moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
 moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 #REMEMBER: coefficients are log odds
-logr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
-logr.fcode <- glm(mc ~ as.factor(FCODE), data=indat, family="binomial")
-logr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
-logr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
-logr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
-logr.pdsiclass <- glm(mc ~ pdsi_mean + nhdclass, data=indat, family="binomial")
-logr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="binomial")
+lr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
+lr.fcode <- glm(mc ~ as.factor(FCODE), data=indat, family="binomial")
+lr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
+lr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
+lr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
+lr.pdsiclass <- glm(mc ~ pdsi_mean + nhdclass, data=indat, family="binomial")
+lr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="binomial")
 
 
 # Predict with model ------------------------------------------------------
 
-preds <- predict(logr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
+preds <- predict(lr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad check year", ylab="Probability of misclassification")
 
-predclass <- predict(logr.class, newdata = data.frame(nhdclass=c('Perennial', 'Intermittent')), type="response")
+predclass <- predict(lr.class, newdata = data.frame(nhdclass=c('Perennial', 'Intermittent')), type="response")
 
 fcode.df <- data.frame(FCODE=c(46003, 46006, 46007, 55800))
-predfcode <- cbind(fcode.df, predict(logr.fcode, newdata=fcode.df, type="response"))
+predfcode <- cbind(fcode.df, predict(lr.fcode, newdata=fcode.df, type="response"))
 
 
 
@@ -182,6 +188,21 @@ ggplot(results.summary, aes(x=mctype, y=value)) +
   geom_bar(stat="identity") + 
   labs(x="", y="Percent") +
   ggtitle("Mean of 10 random samples (n=2000) of wet (after July) and dry points")
+
+
+# Logistic regression with a balanced dataset -----------------------------
+
+indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+wetobs <- indat.dry[indat.dry$Category=="Wet",]
+dryobs <- indat.dry[indat.dry$Category=="Dry",]
+nsample <- 2800
+
+for (i in 1:10)
+{
+  obssample <- rbind(wetobs[sample(nrow(wetobs), nsample),], dryobs[sample(nrow(dryobs), nsample),])
+  lr.pdsi.balanced <- glm(mc ~ pdsi_mean, data=obssample, family="binomial")
+  print(paste(i, summary(lr.pdsi.balanced)$coefficients[2,1], summary(lr.pdsi.balanced)$coefficients[2,4]))
+}
 
 # Plot misclassifications by month ----------------------------------------
 
