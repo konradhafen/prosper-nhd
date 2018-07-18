@@ -176,6 +176,7 @@ for (i in 1:10)
 results.summary <- as.data.frame(colMeans(results)/(nsample*2)*100)
 names(results.summary) <- c("value")
 results.summary$mctype <- unique(allobs$mctype)
+results.summary
 
 ggplot(results.summary, aes(x=mctype, y=value)) +
   geom_bar(stat="identity") + 
