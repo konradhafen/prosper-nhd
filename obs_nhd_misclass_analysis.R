@@ -164,21 +164,21 @@ minobs <- 3259 #minimum of wet and dry observations
 nsample <- 2000 # number of samples to take from wet and dry points
 wetobs <- plotdat.dry[plotdat.dry$Category=="Wet",]
 dryobs <- plotdat.dry[plotdat.dry$Category=="Dry",]
-results <- data.frame(sample=1:10, agree=NA, ndow=NA, nwod=NA)
+results <- data.frame(Agree=NA, NHDdryObsWet=NA, NHDwetObsDry=NA)
 
 for (i in 1:10)
 {
   obssample <- rbind(wetobs[sample(nrow(wetobs), nsample),], dryobs[sample(nrow(dryobs), nsample),])
-  results[results$sample==i,] <- list(i, sum(obssample$mctype=="Agree"), sum(obssample$mctype=="NHD dry Observation wet"),
+  results[i,] <- list(sum(obssample$mctype=="Agree"), sum(obssample$mctype=="NHD dry Observation wet"),
                               sum(obssample$mctype=="NHD wet Observation dry"))
 }
 
-results$correct <- results$agree/(nsample*2)
-results.summary <- colSums(results)
-results.summary[5] <- results.summary[2]/(nsample*2*nrow(results))
-results
-results.summary
+results.summary <- as.data.frame(colMeans(results)/(nsample*2)*100)
+names(results.summary) <- c("value")
+results.summary$mctype <- unique(allobs$mctype)
 
+ggplot(results.summary, aes(x=mctype, y=value)) +
+  geom_bar(stat="identity")
 
 # Plot misclassifications by month ----------------------------------------
 
