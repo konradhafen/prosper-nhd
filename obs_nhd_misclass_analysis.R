@@ -178,7 +178,9 @@ names(results.summary) <- c("value")
 results.summary$mctype <- unique(allobs$mctype)
 
 ggplot(results.summary, aes(x=mctype, y=value)) +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity") + 
+  labs(x="", y="Percent") +
+  ggtitle("Mean of 10 random samples (n=2000) of wet (after July) and dry points")
 
 # Plot misclassifications by month ----------------------------------------
 
