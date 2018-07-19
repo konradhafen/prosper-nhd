@@ -241,9 +241,11 @@ write_csv(aghuc8, "misclassification_huc8.csv")
 
 # Aggregate by quad -------------------------------------------------------
 
-agquad <- indat.dry %>% group_by(US_7_ID) %>% summarise(misclass=mean(mc), count=sum(mc))
+agquad <- indat.dry %>% group_by(US_7_ID) %>% summarise(misclass=mean(mc), count=n())
 write_csv(agquad, "misclassification_quad.csv")
 agquad.plot <- agquad[agquad$count > 0,]
+agquad.plot1 <- agquad[agquad$count == 1,]
+agquad.plot1g <- agquad[agquad$count > 10,]
 
 # library(reshape2)
 # agquad.plot.melt <- melt(agquad.plot[,2:3])
@@ -252,7 +254,7 @@ ggplot(agquad.plot, aes(x=count)) +
   geom_histogram(binwidth = 1) + 
   labs(x="Observations per quad", y="Count")
 
-ggplot(agquad.plot, aes(x=misclass)) +
+ggplot(agquad.plot1g, aes(x=misclass)) +
   geom_histogram(binwidth = 0.025) +
   labs(x="Percentage of misclassifications", y="Count")
 
