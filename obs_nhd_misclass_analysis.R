@@ -149,6 +149,7 @@ predfcode <- cbind(fcode.df, predict(lr.fcode, newdata=fcode.df, type="response"
 plotdat.year <- allobs[allobs$Year > 0,]
 plotdat.date <- allobs[allobs$Month>0 & allobs$Month<13 & allobs$Year>0,]
 plotdat.dry <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
+indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 #summary tables
 table.all <- table(allobs$nhdclass, allobs$Category)
@@ -206,7 +207,8 @@ for (i in 1:10)
 
 
 
-# Plot misclassifications by HUC ------------------------------------------
+
+# Plot misclassifications spatially ---------------------------------------
 
 #HUC6
 plotdat.dry$HUC_6 <- as.numeric(substr(plotdat.dry$HUC_8, 1, 6))
@@ -228,7 +230,6 @@ ggplot(plotdat.dry, aes(as.factor(HUC_12))) +
   labs(x="")
 
 
-
 # Aggregate by HUC --------------------------------------------------------
 
 aghuc12 <- plotdat.dry %>% group_by(HUC_12) %>% summarise(misclass=mean(mc))
@@ -236,6 +237,24 @@ write_csv(aghuc12, "misclassification_huc12.csv")
 
 aghuc8 <- plotdat.dry %>% group_by(HUC_8) %>% summarise(misclass=mean(mc))
 write_csv(aghuc8, "misclassification_huc8.csv")
+
+
+# Aggregate by quad -------------------------------------------------------
+
+agquad <- indat.dry %>% group_by(US_7_ID) %>% summarise(misclass=mean(mc), count=sum(mc))
+write_csv(agquad, "misclassification_quad.csv")
+agquad.plot <- agquad[agquad$count > 0,]
+
+# library(reshape2)
+# agquad.plot.melt <- melt(agquad.plot[,2:3])
+
+ggplot(agquad.plot, aes(x=count)) +
+  geom_histogram(binwidth = 1) + 
+  labs(x="Observations per quad", y="Count")
+
+ggplot(agquad.plot, aes(x=misclass)) +
+  geom_histogram(binwidth = 0.025) +
+  labs(x="Percentage of misclassifications", y="Count")
 
 
 # Plot misclassifications by month ----------------------------------------
