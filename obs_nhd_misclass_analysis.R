@@ -204,6 +204,40 @@ for (i in 1:10)
   print(paste(i, summary(lr.pdsi.balanced)$coefficients[2,1], summary(lr.pdsi.balanced)$coefficients[2,4]))
 }
 
+
+
+# Plot misclassifications by HUC ------------------------------------------
+
+#HUC6
+plotdat.dry$HUC_6 <- as.numeric(substr(plotdat.dry$HUC_8, 1, 6))
+ggplot(plotdat.dry, aes(as.factor(HUC_6))) +
+  scale_fill_manual(values=c("#52de01","#04a9fc","#ff1904"), name="Observation type") +
+  geom_bar(aes(fill=mctype)) +
+  labs(x="HUC 6", y="Observations") + 
+  theme(axis.text.x = element_text(angle=-90, vjust=0.5), legend.position = c(0.13,0.84))
+
+#HUC8
+ggplot(plotdat.dry, aes(as.factor(HUC_8))) +
+  geom_bar(aes(fill=mctype)) +
+  labs(x="", y="Observations")
+
+#HUC12
+ggplot(plotdat.dry, aes(as.factor(HUC_12))) +
+  geom_bar(aes(fill=mctype)) +
+  scale_y_continuous(breaks=seq(0,50,10)) +
+  labs(x="")
+
+
+
+# Aggregate by HUC --------------------------------------------------------
+
+aghuc12 <- plotdat.dry %>% group_by(HUC_12) %>% summarise(misclass=mean(mc))
+write_csv(aghuc12, "misclassification_huc12.csv")
+
+aghuc8 <- plotdat.dry %>% group_by(HUC_8) %>% summarise(misclass=mean(mc))
+write_csv(aghuc8, "misclassification_huc8.csv")
+
+
 # Plot misclassifications by month ----------------------------------------
 
 #summary of plot data
