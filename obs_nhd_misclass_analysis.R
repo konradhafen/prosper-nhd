@@ -17,6 +17,7 @@ indat <- as.data.frame(read_csv(fn))
 indat <- indat[indat$ppt_pt > 0,]
 
 allobs <-as.data.frame(read_csv("all_obs_hr_nhd.csv"))
+allmrhr <- as.data.frame(read_csv("all_obs_mr_hr.csv"))
 
 # remove observation where FCODE may be incorrect
 indat <- indat[indat$FID != 11120,]
@@ -44,29 +45,29 @@ nhdclass <- function(fcode)
 {
   if (fcode == 46006 | fcode == 55800)
   {
-    return('Perennial')
+    return('Permanent')
   }
   else
   {
-    return('Intermittent')
+    return('Nonpermanent')
   }
 }
 
 misclass_type <- function(nhdclass, obsclass)
 {
-  if ((nhdclass == "Perennial" & obsclass == "Wet") | (nhdclass == "Intermittent" & obsclass == "Dry"))
+  if ((nhdclass == "Permanent" & obsclass == "Wet") | (nhdclass == "Nonpermanent" & obsclass == "Dry"))
   {
     return ("Agree")
   }
   
   else
   {
-    if (nhdclass == "Perennial" & obsclass =="Dry")
+    if (nhdclass == "Permanent" & obsclass =="Dry")
     {
       return ("NHD wet Observation dry")
     }
     
-    else if (nhdclass == "Intermittent" & obsclass =="Wet")
+    else if (nhdclass == "Nonpermanent" & obsclass =="Wet")
     {
       return ("NHD dry Observation wet")
     }
@@ -83,7 +84,7 @@ misclass_type <- function(nhdclass, obsclass)
 
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
 indat$nhdclass <- mapply(nhdclass, indat$FCODE)
-indat$wet <- ifelse(indat$nhdclass=="Perennial", 1, 0)
+indat$wet <- ifelse(indat$nhdclass=="Permanent", 1, 0)
 indat$mctype <- mapply(misclass_type, indat$nhdclass, indat$Category)
 
 allobs$mc <- mapply(misclass, allobs$FCODE, allobs$Category)
@@ -91,14 +92,21 @@ allobs$nhdclass <- mapply(nhdclass, allobs$FCODE)
 allobs$mctype <- mapply(misclass_type, allobs$nhdclass, allobs$Category)
 allobsmc <- subset(allobs, allobs$mc == 1)
 
-perdat <- subset(indat, indat$nhdclass =='Perennial')
-intdat <- subset(indat, indat$nhdclass =='Intermittent')
+allmrhr$mcmr <- mapply(misclass, allmrhr$FCODE, allmrhr$Category)
+allmrhr$nhdclassmr <- mapply(nhdclass, allmrhr$FCODE)
+allmrhr$mctypemr <- mapply(misclass_type, allmrhr$nhdclassmr, allmrhr$Category)
+allmrhr$mchr <- mapply(misclass, allmrhr$FCODE_1, allmrhr$Category)
+allmrhr$nhdclasshr <- mapply(nhdclass, allmrhr$FCODE_1)
+allmrhr$mctypehr <- mapply(misclass_type, allmrhr$nhdclasshr, allmrhr$Category)
+
+perdat <- subset(indat, indat$nhdclass =='Permanent')
+intdat <- subset(indat, indat$nhdclass =='Nonpermanent')
 
 agnhd <- indat %>% group_by(id) %>% summarise(fcode=mean(FCODE))
 agnhd$nhdclass <- mapply(nhdclass, agnhd$fcode)
 agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
 agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
-agdat$mc <- ifelse((agdat$nhdclass=="Perennial"&agdat$wet<1) | (agdat$nhdclass=="Intermittent"&agdat$wet==1), 1, 0)
+agdat$mc <- ifelse((agdat$nhdclass=="Permanent"&agdat$wet<1) | (agdat$nhdclass=="Nonpermanent"&agdat$wet==1), 1, 0)
 
 agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
 
@@ -136,7 +144,7 @@ lr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="binom
 preds <- predict(lr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad check year", ylab="Probability of misclassification")
 
-predclass <- predict(lr.class, newdata = data.frame(nhdclass=c('Perennial', 'Intermittent')), type="response")
+predclass <- predict(lr.class, newdata = data.frame(nhdclass=c('Permanent', 'Nonpermanent')), type="response")
 
 fcode.df <- data.frame(FCODE=c(46003, 46006, 46007, 55800))
 predfcode <- cbind(fcode.df, predict(lr.fcode, newdata=fcode.df, type="response"))
@@ -191,6 +199,44 @@ ggplot(results.summary, aes(x=mctype, y=value)) +
   ggtitle("Mean of 10 random samples (n=2000) of wet (after July) and dry points")
 
 
+# Cross validated comparison of MR/HR and Observations --------------------
+
+nsample <- 2000 # number of samples to take from wet and dry points
+mrhr.dry <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
+wetobs <- mrhr.dry[mrhr.dry$Category=="Wet",]
+dryobs <- mrhr.dry[mrhr.dry$Category=="Dry",]
+resultshr <- data.frame(Agree=NA, NHDdryObsWet=NA, NHDwetObsDry=NA)
+resultsmr <- data.frame(Agree=NA, NHDdryObsWet=NA, NHDwetObsDry=NA)
+
+for (i in 1:10)
+{
+  obssample <- rbind(wetobs[sample(nrow(wetobs), nsample),], dryobs[sample(nrow(dryobs), nsample),])
+  resultsmr[i,] <- list(sum(obssample$mctypemr=="Agree"), sum(obssample$mctypemr=="NHD dry Observation wet"),
+                      sum(obssample$mctypemr=="NHD wet Observation dry"))
+  resultshr[i,] <- list(sum(obssample$mctypehr=="Agree"), sum(obssample$mctypehr=="NHD dry Observation wet"),
+                        sum(obssample$mctypehr=="NHD wet Observation dry"))
+}
+
+resultsmr.summary <- as.data.frame(colMeans(resultsmr)/(nsample*2)*100)
+names(resultsmr.summary) <- c("value")
+resultsmr.summary$mctype <- c("Agree", "NHD dry Observation Wet", "NHD wet Observation dry")
+resultsmr.summary$version <- "MR-NHD"
+resultsmr.summary
+
+resultshr.summary <- as.data.frame(colMeans(resultshr)/(nsample*2)*100)
+names(resultshr.summary) <- c("value")
+resultshr.summary$mctype <- c("Agree", "NHD dry Observation Wet", "NHD wet Observation dry")
+resultshr.summary$version <- "HR-NHD"
+resultshr.summary
+
+results <- rbind(resultshr.summary, resultsmr.summary)
+
+ggplot(results, aes(x=mctype, y=value)) +
+  geom_bar(stat="identity") + 
+  facet_wrap(~version, ncol=1) +
+  labs(x="", y="Percent") +
+  ggtitle("Mean of 10 random samples (n=2000) of wet (after July) and dry points")
+
 # Logistic regression with a balanced dataset -----------------------------
 
 indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
@@ -206,14 +252,12 @@ for (i in 1:10)
 }
 
 
-
-
 # Plot misclassifications spatially ---------------------------------------
 
 #HUC6
 plotdat.dry$HUC_6 <- as.numeric(substr(plotdat.dry$HUC_8, 1, 6))
 ggplot(plotdat.dry, aes(as.factor(HUC_6))) +
-  scale_fill_manual(values=c("#52de01","#04a9fc","#ff1904"), name="Observation type") +
+  scale_fill_manual(values=c("#03B935","#04a9fc","#ff1904"), name="Observation type") +
   geom_bar(aes(fill=mctype)) +
   labs(x="HUC 6", y="Observations") + 
   theme(axis.text.x = element_text(angle=-90, vjust=0.5), legend.position = c(0.13,0.84))
