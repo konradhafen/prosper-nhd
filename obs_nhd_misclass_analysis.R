@@ -257,7 +257,7 @@ for (i in 1:10)
 #HUC6
 plotdat.dry$HUC_6 <- as.numeric(substr(plotdat.dry$HUC_8, 1, 6))
 ggplot(plotdat.dry, aes(as.factor(HUC_6))) +
-  scale_fill_manual(values=c("#03B935","#04a9fc","#ff1904"), name="Observation type") +
+  scale_fill_manual(values=c("#52de01","#04a9fc","#ff1904"), name="Observation type") +
   geom_bar(aes(fill=mctype)) +
   labs(x="HUC 6", y="Observations") + 
   theme(axis.text.x = element_text(angle=-90, vjust=0.5), legend.position = c(0.13,0.84))
