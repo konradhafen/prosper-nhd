@@ -23,6 +23,7 @@ allmrhr <- as.data.frame(read_csv("all_obs_mr_hr.csv"))
 indat <- indat[indat$FID != 11120,]
 indat$ppt_dif <- indat$ppt_mean - indat$ppt_pt
 allobs <- allobs[allobs$FID != 8501,]
+indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 # Functions ---------------------------------------------------------------
 
@@ -403,28 +404,49 @@ ggplot(monthdat.melt, aes(as.factor(Month))) +
 # Scatter plot of misclassification type and climate conditions -----------
 
 ggplot(indat.dry, aes(x=pdsi_dif, y=ppt_dif)) + 
-  geom_point(aes(color=as.factor(mc)))
+  geom_point(aes(color=as.factor(mctype))) + 
+  labs(x="PDSI difference", y="Precipitation percentile difference", color="Disagreement") +
+  ggtitle("Difference")
 
 ggplot(indat.dry, aes(x=pdsi_mean, y=ppt_mean)) + 
-  geom_point(aes(color=as.factor(mc)))
+  geom_point(aes(color=as.factor(mctype))) + 
+  labs(x="PDSI", y="Precipitation percentile", color="Disagreement") +
+  ggtitle("Climate during NHD collection")
+
+ggplot(indat.dry, aes(x=pdsi_pt, y=ppt_pt)) + 
+  geom_point(aes(color=as.factor(mctype))) +
+  labs(x="PDSI", y="Precipitation percentile", color="Disagreement") +
+  ggtitle("Climate during field obs collection")
 
 
 # Box plots of misclassification type and climate conditions --------------
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=ppt_dif)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="Difference in precip percentile") + 
+  ggtitle("Difference between NHD collection year and field observation year")
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=ppt_pt)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="Precipitation percentile") + 
+  ggtitle("NHD collection year")
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=ppt_mean)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="Precipitation percentile") + 
+  ggtitle("Field observation year")
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=pdsi_dif)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="Difference in PDSI") + 
+  ggtitle("Difference between NHD collection year and field observation year")
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=pdsi_pt)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="PDSI") + 
+  ggtitle("Field observation year")
 
 ggplot(indat.dry, aes(x=as.factor(mctype), y=pdsi_mean)) + 
-  geom_boxplot()
+  geom_boxplot() + 
+  labs(x="", y="PDSI") + 
+  ggtitle("NHD collection year")
