@@ -26,7 +26,16 @@ indat$mctype <- mapply(misclass_type, indat$nhdclass, indat$Category)
 
 # Examine HUC -------------------------------------------------------------
 
-huc <- 17040220
+hucs <-c(17040220, 17010213, 17010303, 17010214, 17040205)
+huc <- 17040205
 testdat <- indat[indat$huc8 == huc,]
 testdat.mcdry <- testdat[testdat$mctype=="NHD wet Observation dry",]
 testdat.mcwet <- testdat[testdat$mctype=="NHD dry Observation wet",]
+hist(testdat.mcdry$pdsi_dif)
+hist(testdat.mcdry$pdsi_mean)
+hist(testdat.mcdry$pdsi_pt)
+hist(testdat.mcwet$pdsi_dif)
+hist(testdat.mcwet$pdsi_mean)
+hist(testdat.mcwet$pdsi_pt)
+hist(testdat.mcdry$Year)
+hist(testdat.mcdry$year_chk)
