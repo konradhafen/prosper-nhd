@@ -10,6 +10,7 @@ setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 fn <- "obs_hr_nhd_scpdsi.csv"
 
 library(tidyverse)
+library(broom)
 #library(reshape2)
 #library(plyr)
 
@@ -132,16 +133,32 @@ moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
 moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 #REMEMBER: coefficients are log odds
-lr.class <- glm(mc ~ nhdclass, data=indat, family="binomial")
-lr.fcode <- glm(mc ~ as.factor(FCODE), data=indat, family="binomial")
-lr.dif <- glm(mc ~ abs(pdsi_dif), data=indat, family="binomial")
-lr.pt <- glm(mc ~ pdsi_pt, data=indat, family="binomial")
-lr.pdsi <- glm(mc ~ pdsi_mean, data=indat, family="binomial")
-lr.pdsiclass <- glm(mc ~ pdsi_mean + nhdclass, data=indat, family="binomial")
-lr.pdsifcode <- glm(mc ~ pdsi_mean + as.factor(FCODE), data=indat, family="binomial")
+indat.dry$apdsi_dif <- abs(indat.dry$pdsi_dif)
+indat.dry$appt_dif <- abs(indat.dry$ppt_dif)
+lr.pdsi <- glm(mc ~ Category + pdsi_mean, data=indat.dry, family=binomial)
+lr.pdsidif <- glm(mc ~ Category + apdsi_dif, data=indat.dry, family=binomial)
+lr.pdsidifint<- glm(mc ~ Category * apdsi_dif, data=indat.dry, family=binomial)
+lr.ppt <- glm(mc ~ Category + ppt_pt, data=indat.dry, family=binomial)
+lr.pptint <- glm(mc ~ Category * ppt_pt, data=indat.dry, family=binomial)
+lr.pptdif <- glm(mc ~ Category + appt_dif, data=indat.dry, family=binomial)
 
+#cooks distance
+plot(lr.pdsidifint, which=4, id.n=3)
+
+#extract model results
+model.data <- augment(lr.pdsidif) %>% mutate(index = 1:n())
+
+ggplot(model.data, aes(apdsi_dif, .std.resid)) + 
+  geom_point(aes(color = as.factor(mc)), alpha = .5) +
+  theme_bw()
 
 # Predict with model ------------------------------------------------------
+
+dat.pred <- rbind(data.frame(Category="Dry", apdsi_dif=seq(0,9,0.1)), data.frame(Category="Wet", apdsi_dif=seq(0,9,0.1)))
+preds <- predict(lr.pdsidifint, newdata=dat.pred, type="response")
+dat.pred$pred <- preds
+plot(dat.pred[dat.pred$Category=="Dry",]$apdsi_dif, dat.pred[dat.pred$Category=="Dry",]$pred, type="l", ylim=c(0,0.75), col="red")
+lines(dat.pred[dat.pred$Category=="Wet",]$apdsi_dif, dat.pred[dat.pred$Category=="Wet",]$pred, col="blue")
 
 preds <- predict(lr.pdsi, newdata = data.frame(pdsi_mean=seq(-6,6,0.25)), type="response")
 plot(seq(-6,6,0.25), preds, type="l", ylim=c(0,0.25), xlab="scPDSI during quad check year", ylab="Probability of misclassification")
