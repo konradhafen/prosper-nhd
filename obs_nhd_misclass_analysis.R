@@ -145,7 +145,18 @@ lr.pptdif <- glm(mc ~ Category + appt_dif, data=indat.dry, family=binomial)
 #cooks distance
 plot(lr.pdsidifint, which=4, id.n=3)
 
-#extract model results
+#extract model results for additive model
+model.data <- augment(lr.pdsidif) %>% mutate(index = 1:n())
+score <- qnorm((0.95/2) + 0.5)
+model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
+model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
+ggplot(model.data, aes(apdsi_dif, plogis(.fitted))) +
+  geom_ribbon(aes(x=apdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
+  geom_line(aes(color=Category)) + 
+  theme_bw()
+  
+
+#extract model results for interactive model
 model.data <- augment(lr.pdsidifint) %>% mutate(index = 1:n())
 
 ggplot(model.data, aes(index, .std.resid)) + 
@@ -158,8 +169,10 @@ model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
 dry <- model.data[model.data$Category=="Dry",]
 ggplot(model.data, aes(apdsi_dif, plogis(.fitted))) +
   geom_ribbon(aes(x=apdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha=0.25) +
-  geom_line(aes(color = Category)) +
-  labs(x="scPDSI difference (absolute value)", y="Fitted values") +
+  geom_line(aes(color = Category), size=1) +
+  scale_x_continuous(breaks = seq(0,9,1)) +
+  scale_y_continuous(breaks = seq(0,0.7,0.1)) +
+  labs(x="scPDSI difference (absolute value)", y="Probability of NHD disagreement") +
   theme_bw()
 
 # Predict with model ------------------------------------------------------
