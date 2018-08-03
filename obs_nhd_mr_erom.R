@@ -34,7 +34,8 @@ ggplot(indat, aes(log(Q0001F))) +
 
 ggplot(indat.dry, aes(x=nhdclass, y=log(Q0001F))) + 
   geom_boxplot() + 
-  facet_wrap(~Category, ncol=2)
+  facet_wrap(~Category, ncol=2) + 
+  labs(x="", y="Mean annual flow log(Q0001F)")
 
 ggplot(indat.lowq, aes(x=nhdclass, y=Q0001F)) + 
   geom_boxplot() + 
