@@ -490,3 +490,16 @@ ggplot(indat.dry, aes(x=as.factor(mctype), y=pdsi_mean)) +
   geom_boxplot() + 
   labs(x="", y="PDSI") + 
   ggtitle("NHD collection year")
+
+
+# Effect of dam indexes ---------------------------------------------------
+
+allmrdam <- as.data.frame(read_csv("all_obs_mr_damindex.csv"))
+allmrdam <- allmrdam[!(allmrdam$Category=="Wet" & allmrdam$Month<8),]
+
+allmrdam$mc <- mapply(misclass, allmrdam$FCODE, allmrdam$Category)
+allmrdam$nhdclass <- mapply(nhdclass, allmrdam$FCODE)
+allmrdam$mctype <- mapply(misclass_type, allmrdam$nhdclass, allmrdam$Category)
+
+lr.dami <- glm(mc ~ DamIndex, data=allmrdam)
+summary(lr.dami)
