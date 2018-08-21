@@ -125,6 +125,44 @@ names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
 cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
+
+# Spline model ------------------------------------------------------------
+
+moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
+
+#exclude wet observations before August
+moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+
+moddat$pdsi1 <- ifelse(moddat$pdsi_mean<0, moddat$pdsi_mean, 0)
+moddat$pdsi2 <- ifelse(moddat$pdsi_mean>=0, moddat$pdsi_mean, 0)
+
+moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
+moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
+
+lr.spline.pdsi <- glm(mc ~ Category + pdsi1 + pdsi2, data=moddat, family=binomial)
+lr.spline.pdsiint <- glm(mc ~ Category*pdsi1 + Category*pdsi2, data=moddat, family=binomial)
+lr.spline.dif <- glm(mc ~ Category + pdsidif1 + pdsidif2, data=moddat, family=binomial)
+lr.spline.difint<- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
+
+library(bbmle)
+AICctab(lr.spline.pdsi, lr.spline.pdsiint, lr.spline.dif, lr.spline.difint)
+
+
+# Plot spline model -------------------------------------------------------
+
+model.data <- augment(lr.spline.difint) %>% mutate(index = 1:n())
+model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
+score <- qnorm((0.95/2) + 0.5)
+# model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
+# model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
+model.data$lwr <- model.data$.fitted-score*model.data$.se.fit
+model.data$upr <- model.data$.fitted+score*model.data$.se.fit
+ggplot(model.data, aes(pdsi_dif, .fitted)) +
+  geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
+  geom_line(aes(color=Category)) + 
+  labs(x = "scPDSI difference", y = "log Odds") +
+  theme_bw()
+
 # Model misclassifications ------------------------------------------------
 
 moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]

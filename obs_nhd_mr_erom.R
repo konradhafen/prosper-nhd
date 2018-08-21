@@ -63,7 +63,13 @@ indat.month$nhdclass <- mapply(nhdclass, indat.month$FCODE)
 indat.melt <- melt(indat.month, id = c("Category", "nhdclass"), measure.vars = c("1", "2", "3", "4", "5", "6",
                                        "7", "8", "9", "10", "11", "12"))
 indat.melt$groups <- interaction(indat.melt$Category, indat.melt$nhdclass)
+indat.melt$logvalue <- log(indat.melt$value + 0.01)
 
-ggplot(data=indat.melt, aes(y=log(value), x=variable, fill=Category)) + 
+ggplot(data=indat.melt, aes(y=logvalue, x=variable, fill=Category)) + 
   geom_boxplot() + 
-  facet_wrap(~nhdclass, ncol = 1)
+  facet_wrap(~nhdclass, ncol = 1) + 
+  labs(y = "ln[Q] cfs", x = "Month")
+
+ggplot(data=indat.melt, aes(y=logvalue, x=variable, fill=groups)) + 
+  geom_boxplot() + 
+  labs(y = "ln[Q] cfs", x = "Month")
