@@ -146,7 +146,16 @@ lr.spline.difint<- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, 
 
 library(bbmle)
 AICctab(lr.spline.pdsi, lr.spline.pdsiint, lr.spline.dif, lr.spline.difint)
+library(pscl)
+pR2(lr.spline.difint)
 
+# ROC for spline model ----------------------------------------------------
+
+library(pROC)
+roc.data <- augment(lr.spline.difint)
+roc.result <- roc(mc ~ plogis(.fitted), data=roc.data)
+auc(roc.result)
+plot.roc(roc.result, xlim=c(0,1), ylim=c(0,1))
 
 # Plot spline model -------------------------------------------------------
 
