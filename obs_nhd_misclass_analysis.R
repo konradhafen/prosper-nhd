@@ -153,14 +153,15 @@ AICctab(lr.spline.pdsi, lr.spline.pdsiint, lr.spline.dif, lr.spline.difint)
 model.data <- augment(lr.spline.difint) %>% mutate(index = 1:n())
 model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
 score <- qnorm((0.95/2) + 0.5)
-# model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
-# model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
-model.data$lwr <- model.data$.fitted-score*model.data$.se.fit
-model.data$upr <- model.data$.fitted+score*model.data$.se.fit
-ggplot(model.data, aes(pdsi_dif, .fitted)) +
+model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
+model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
+# model.data$lwr <- model.data$.fitted-score*model.data$.se.fit
+# model.data$upr <- model.data$.fitted+score*model.data$.se.fit
+ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
   geom_line(aes(color=Category)) + 
-  labs(x = "scPDSI difference", y = "log Odds") +
+  geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1) +
+  labs(x = "scPDSI difference", y = "Probability of disagreement") +
   theme_bw()
 
 # Model misclassifications ------------------------------------------------
