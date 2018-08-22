@@ -153,9 +153,9 @@ pR2(lr.spline.difint)
 
 library(pROC)
 roc.data <- augment(lr.spline.difint)
-roc.result <- roc(mc ~ plogis(.fitted), data=roc.data)
-auc(roc.result)
-plot.roc(roc.result, xlim=c(0,1), ylim=c(0,1))
+roc.spline <- roc(mc ~ plogis(.fitted), data=roc.data)
+auc(roc.spline)
+plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
 # Plot spline model -------------------------------------------------------
 
@@ -181,14 +181,15 @@ moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
 moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 #REMEMBER: coefficients are log odds
-indat.dry$apdsi_dif <- abs(indat.dry$pdsi_dif)
-indat.dry$appt_dif <- abs(indat.dry$ppt_dif)
-lr.pdsi <- glm(mc ~ Category + pdsi_mean, data=indat.dry, family=binomial)
-lr.pdsidif <- glm(mc ~ Category + apdsi_dif, data=indat.dry, family=binomial)
-lr.pdsidifint<- glm(mc ~ Category * apdsi_dif, data=indat.dry, family=binomial)
-lr.ppt <- glm(mc ~ Category + ppt_pt, data=indat.dry, family=binomial)
-lr.pptint <- glm(mc ~ Category * ppt_pt, data=indat.dry, family=binomial)
-lr.pptdif <- glm(mc ~ Category + appt_dif, data=indat.dry, family=binomial)
+moddat$apdsi_dif <- abs(moddat$pdsi_dif)
+moddat$appt_dif <- abs(moddat$ppt_dif)
+lr.cat <- glm(mc ~ Category, data=moddat, family=binomial)
+lr.pdsi <- glm(mc ~ Category + pdsi_mean, data=moddat, family=binomial)
+lr.pdsidif <- glm(mc ~ Category + apdsi_dif, data=moddat, family=binomial)
+lr.pdsidifint<- glm(mc ~ Category * apdsi_dif, data=moddat, family=binomial)
+lr.ppt <- glm(mc ~ Category + ppt_pt, data=moddat, family=binomial)
+lr.pptint <- glm(mc ~ Category * ppt_pt, data=moddat, family=binomial)
+lr.pptdif <- glm(mc ~ Category + appt_dif, data=moddat, family=binomial)
 
 #cooks distance
 plot(lr.pdsidifint, which=4, id.n=3)
