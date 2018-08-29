@@ -139,13 +139,16 @@ moddat$pdsi2 <- ifelse(moddat$pdsi_mean>=0, moddat$pdsi_mean, 0)
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
 
+lr.spline.nocat <- glm(mc ~ pdsi1 + pdsi2, data=moddat, family=binomial)
 lr.spline.pdsi <- glm(mc ~ Category + pdsi1 + pdsi2, data=moddat, family=binomial)
 lr.spline.pdsiint <- glm(mc ~ Category*pdsi1 + Category*pdsi2, data=moddat, family=binomial)
 lr.spline.dif <- glm(mc ~ Category + pdsidif1 + pdsidif2, data=moddat, family=binomial)
 lr.spline.difint<- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
+lr.spline.nhd <- glm(mc ~ nhdclass + pdsidif1 + pdsidif2, data=moddat, family=binomial)
+lr.spline.nhdint<- glm(mc ~ nhdclass*pdsidif1 + nhdclass*pdsidif2, data=moddat, family=binomial)
 
 library(bbmle)
-AICctab(lr.spline.pdsi, lr.spline.pdsiint, lr.spline.dif, lr.spline.difint)
+AICctab(lr.spline.pdsi, lr.spline.pdsiint, lr.spline.dif, lr.spline.difint, lr.spline.nhd, lr.spline.nhdint, lr.spline.nocat)
 library(pscl)
 pR2(lr.spline.difint)
 
