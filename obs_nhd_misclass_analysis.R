@@ -176,6 +176,25 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   labs(x = "scPDSI difference", y = "Probability of disagreement") +
   theme_bw()
 
+
+# Apply model to all quads in CRB -----------------------------------------
+
+quadfn <- "crb_quads_scpdsi.csv"
+quaddat <- read.csv(quadfn)
+quaddat$pdsidif1 <- ifelse(quaddat$pdsi_mean<0, quaddat$pdsi_mean, 0)
+quaddat$pdsidif2 <- ifelse(quaddat$pdsi_mean>=0, quaddat$pdsi_mean, 0)
+quadpred.dry <- quaddat
+quadpred.wet <- quaddat
+quadpred.dry$Category <- "Dry"
+quadpred.wet$Category <- "Wet"
+quadpred.dry <- cbind(quadpred.dry, predict(lr.spline.difint, newdata=quadpred.dry, se.fit=T))
+quadpred.dry$prob <- plogis(quadpred.dry$fit)
+quadpred.wet <- cbind(quadpred.wet, predict(lr.spline.difint, newdata=quadpred.wet, se.fit=T))
+quadpred.wet$prob <- plogis(quadpred.wet$fit)
+
+write.csv(quadpred.dry, "crb_quads_pred_dry.csv", row.names = F)
+write.csv(quadpred.wet, "crb_quads_pred_wet.csv", row.names = F)
+
 # Model misclassifications ------------------------------------------------
 
 moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
