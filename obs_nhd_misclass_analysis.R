@@ -350,6 +350,12 @@ ggplot(results, aes(x=mctype, y=value)) +
   labs(x="", y="Percent") +
   ggtitle("Mean of 10 random samples (n=2000) of wet (after July) and dry points")
 
+
+# Accuracy for MR NHD -----------------------------------------------------
+
+mrhr.dry <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
+sum(mrhr.dry$mctypemr == "Agree")/nrow(mrhr.dry)
+
 # Logistic regression with a balanced dataset -----------------------------
 
 indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
