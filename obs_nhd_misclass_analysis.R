@@ -7,7 +7,7 @@ options(scipen=999)
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
 #contains info from points where quad data a climate data exist
-fn <- "obs_hr_nhd_scpdsi.csv"
+fn <- "obs_hr_nhd_scpdsi_p.csv"
 
 library(tidyverse)
 library(broom)
@@ -212,6 +212,7 @@ lr.pdsidifint<- glm(mc ~ Category * apdsi_dif, data=moddat, family=binomial)
 lr.ppt <- glm(mc ~ Category + ppt_pt, data=moddat, family=binomial)
 lr.pptint <- glm(mc ~ Category * ppt_pt, data=moddat, family=binomial)
 lr.pptdif <- glm(mc ~ Category + appt_dif, data=moddat, family=binomial)
+lr.p <- glm(mc ~ Provisiona*Category, data=moddat, family=binomial)
 
 #cooks distance
 plot(lr.pdsidifint, which=4, id.n=3)
