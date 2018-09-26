@@ -173,7 +173,7 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
   geom_line(aes(color=Category)) + 
   geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1) +
-  labs(x = "scPDSI difference", y = "Probability of disagreement") +
+  labs(x = "PDSI difference", y = "Probability of disagreement") +
   theme_bw()
 
 
@@ -465,7 +465,9 @@ ggplot(plotdat.year, aes((Year))) +
   theme(legend.position = c(1,1), legend.justification = c(1,1))
 
 #by month
-ggplot(plotdat.date, aes(as.factor(Month))) + 
+plotdat.datedry <- allobs[!(allobs$Category=="Wet" & allobs$Month<8)&allobs$Month>0,]
+
+ggplot(plotdat.datedry, aes(as.factor(Month))) + 
   geom_bar(aes(fill=mctype)) +
   scale_fill_manual(values=c("#03B935","#669BFF","#F9766E")) +
   labs(x="Month", y="Observation count", fill="Misclassification") +
@@ -493,6 +495,7 @@ ggplot(plotdat.year, aes(Year)) +
 
 # Aggregate by month ------------------------------------------------------
 
+library(reshape2)
 tempdat <- allobs[allobs$Year>0 & allobs$Month>0,]
 
 monthdat <- tempdat %>% group_by(Month) %>% summarise (ct=n(), ndow=sum(mctype=="NHD dry Observation wet"),
