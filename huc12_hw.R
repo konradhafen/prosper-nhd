@@ -24,5 +24,6 @@ write.csv(hw, "E:/konrad/Projects/usgs/prosper-nhd/data/nhd/WBD/huc12_headwater.
 
 # Observations in huc12s --------------------------------------------------
 
-obsdat <- read.csv("obs_huc12.csv")
-table(obsdat$hw, obsdat$Category)
+obsdat <- read.csv("obs_misclass_huc12.csv")
+obsdat <- obsdat[!(obsdat$Category=="Wet" & obsdat$Month<8),]
+table(obsdat$hw, obsdat$mctype)
