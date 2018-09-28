@@ -126,7 +126,14 @@ ggplot(plotdat, aes(as.factor(Month))) +
 
 # Plot total disagreement -------------------------------------------------
 
+plotdat <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
 
+ggplot(plotdat, aes(mctype)) +
+  geom_bar(width=0.65) + 
+  labs(x="", y="Observation count") +
+  theme_bw()
+
+#Plot dimensions 550x400
 
 # Plot misclassifications by month ----------------------------------------
 
