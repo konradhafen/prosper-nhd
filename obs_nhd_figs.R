@@ -120,3 +120,26 @@ ggplot(plotdat, aes(as.factor(Month))) +
   labs(x="Month", y="Observation count", fill="Observation\nresult") +
   theme_bw() + 
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1))
+
+#Plot dimensions 700x375 
+
+
+# Plot total disagreement -------------------------------------------------
+
+
+
+# Plot misclassifications by month ----------------------------------------
+
+plotdat <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
+
+ggplot(plotdat, aes(as.factor(Month))) + 
+  geom_bar(aes(fill=mctype)) +
+  scale_fill_manual(values=c("#08d104","#0c51fd","#fb0026")) +
+  scale_x_discrete(breaks=0:12, labels=c("Not\nrecorded", "Jan", "Feb", "Mar", "Apr", 
+                                         "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
+                                         "Nov", "Dec")) +
+  labs(x="Month", y="Observation count", fill="Disagreement") +
+  theme_bw() +
+  theme(legend.position = c(0.98,0.98), legend.justification = c(1,1))
+
+#Plot dimensions 700x375
