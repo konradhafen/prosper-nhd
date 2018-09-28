@@ -117,7 +117,7 @@ ggplot(plotdat, aes(as.factor(Month))) +
   scale_x_discrete(breaks=0:12, labels=c("Not\nrecorded", "Jan", "Feb", "Mar", "Apr", 
                                            "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
                                            "Nov", "Dec")) +
-  labs(x="Month", y="Observation count", fill="Observation\nresult") +
+  labs(x="Month", y="Observation count", fill="Observation\nResult") +
   theme_bw() + 
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1))
 
@@ -150,3 +150,31 @@ ggplot(plotdat, aes(as.factor(Month))) +
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1))
 
 #Plot dimensions 700x375
+
+
+# Plot log regression model results ---------------------------------------
+
+moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+
+moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
+moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
+
+lr.spline.difint<- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
+
+model.data <- augment(lr.spline.difint) %>% mutate(index = 1:n())
+model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
+score <- qnorm((0.95/2) + 0.5)
+model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
+model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
+ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
+  geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
+  geom_line(aes(color=Category), size=1.05) + 
+  geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1, size=2) +
+  scale_color_manual(values=c("#fb0026", "#0c51fd")) +
+  scale_y_continuous(name="Probability of disagreement", breaks=seq(0,1.0,0.2)) + 
+  scale_x_continuous(name = "PDSI difference", breaks=seq(-8,8,2)) + 
+  labs(color = "Observation\nType") +
+  theme_bw() +
+  theme(legend.position =c(0.98,0.52), legend.justification = c(1,1))
+
+#Plot dimensions 700x400
