@@ -8,6 +8,7 @@ setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
 #contains info from points where quad data a climate data exist
 fn <- "obs_hr_nhd_scpdsi_p.csv"
+fn <- "obs_hr_nhd_scpdsi_climate.csv"
 
 library(tidyverse)
 library(broom)
@@ -24,7 +25,6 @@ allmrhr <- as.data.frame(read_csv("all_obs_mr_hr.csv"))
 indat <- indat[indat$FID != 11120,]
 indat$ppt_dif <- indat$ppt_mean - indat$ppt_pt
 allobs <- allobs[allobs$FID != 8501,]
-indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 # Functions ---------------------------------------------------------------
 
@@ -102,16 +102,18 @@ allmrhr$mchr <- mapply(misclass, allmrhr$FCODE_1, allmrhr$Category)
 allmrhr$nhdclasshr <- mapply(nhdclass, allmrhr$FCODE_1)
 allmrhr$mctypehr <- mapply(misclass_type, allmrhr$nhdclasshr, allmrhr$Category)
 
-perdat <- subset(indat, indat$nhdclass =='Permanent')
-intdat <- subset(indat, indat$nhdclass =='Nonpermanent')
+indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
-agnhd <- indat %>% group_by(id) %>% summarise(fcode=mean(FCODE))
-agnhd$nhdclass <- mapply(nhdclass, agnhd$fcode)
-agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
-agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
-agdat$mc <- ifelse((agdat$nhdclass=="Permanent"&agdat$wet<1) | (agdat$nhdclass=="Nonpermanent"&agdat$wet==1), 1, 0)
-
-agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
+# perdat <- subset(indat, indat$nhdclass =='Permanent')
+# intdat <- subset(indat, indat$nhdclass =='Nonpermanent')
+# 
+# agnhd <- indat %>% group_by(id) %>% summarise(fcode=mean(FCODE))
+# agnhd$nhdclass <- mapply(nhdclass, agnhd$fcode)
+# agdat <- indat %>% group_by(id) %>% summarise(wet=mean(wet))
+# agdat <- merge(agdat, agnhd[,c("id","nhdclass")], by.x="id", by.y="id")
+# agdat$mc <- ifelse((agdat$nhdclass=="Permanent"&agdat$wet<1) | (agdat$nhdclass=="Nonpermanent"&agdat$wet==1), 1, 0)
+# 
+# agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
 
 
 # Save csv ----------------------------------------------------------------
@@ -124,6 +126,37 @@ write_csv(writeobs, "misclassifications_obs_nhd.csv")
 names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
 cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
+
+
+# Spline model with climate -----------------------------------------------
+
+library(bbmle)
+library(pscl)
+#exclude wet observations before August
+moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+
+moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
+moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
+
+lr.spline.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
+lr.cat <- glm(mc ~ Category, data=moddat, family=binomial)
+lr.clim <- glm(mc ~ Category + climate, data=moddat, family=binomial)
+lr.climint <- glm(mc ~ Category*climate, data=moddat, family=binomial)
+lr.clim.dif <- glm(mc ~ Category + climate + pdsidif1 + pdsidif2, data=moddat, family=binomial)
+lr.clim.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + climate*Category, data=moddat, family=binomial)
+
+AICctab(lr.cat, lr.spline.difint, lr.clim, lr.climint, lr.clim.dif, lr.clim.difint)
+pR2(lr.spline.difint)
+pR2(lr.clim.difint)
+pR2(lr.clim)
+pR2(lr.climint)
+pR2(lr.cat)
+
+library(pROC)
+roc.data <- augment(lr.clim.difint)
+roc.spline <- roc(mc ~ plogis(.fitted), data=roc.data)
+auc(roc.spline)
+plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
 
 # Spline model ------------------------------------------------------------
@@ -521,6 +554,12 @@ ggplot(monthdat.melt, aes(as.factor(Month))) +
   theme(legend.position = "bottom", legend.direction = "horizontal", legend.title = element_blank()) +
   ggtitle("Difference between NHD Classifications and Field Observations")
 
+
+
+# Bar plot of misclassification type by climate type ----------------------
+
+ggplot(indat.dry, aes(climate)) + 
+  geom_bar(aes(fill=mctype))
 
 # Scatter plot of misclassification type and climate conditions -----------
 
