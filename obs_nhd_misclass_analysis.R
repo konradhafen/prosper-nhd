@@ -102,7 +102,18 @@ allmrhr$mchr <- mapply(misclass, allmrhr$FCODE_1, allmrhr$Category)
 allmrhr$nhdclasshr <- mapply(nhdclass, allmrhr$FCODE_1)
 allmrhr$mctypehr <- mapply(misclass_type, allmrhr$nhdclasshr, allmrhr$Category)
 
+mrhr.dry <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
 indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
+
+#percent misclassified MR
+sum(mrhr.dry$mctypemr=="Agree")/nrow(mrhr.dry)
+sum(mrhr.dry$mctypemr=="NHD dry Observation wet")/nrow(mrhr.dry)
+sum(mrhr.dry$mctypemr=="NHD wet Observation dry")/nrow(mrhr.dry)
+
+#percent misclassified HR
+sum(mrhr.dry$mctypehr=="Agree")/nrow(mrhr.dry)
+sum(mrhr.dry$mctypehr=="NHD dry Observation wet")/nrow(mrhr.dry)
+sum(mrhr.dry$mctypehr=="NHD wet Observation dry")/nrow(mrhr.dry)
 
 # perdat <- subset(indat, indat$nhdclass =='Permanent')
 # intdat <- subset(indat, indat$nhdclass =='Nonpermanent')
