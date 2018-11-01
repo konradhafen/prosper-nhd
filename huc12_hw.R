@@ -46,3 +46,10 @@ indat.str <- indat.str[!(indat.str$Category=="Wet" & indat.str$Month<8),]
 ggplot(indat.str, aes(x=StreamOrde)) + 
   geom_histogram(binwidth = 1) + 
   facet_wrap(~nhdclass, ncol=1)
+
+
+# LR model disagreement by stream order -----------------------------------
+
+lr.so <- glm(mc ~ Category*as.factor(StreamOrde), data = indat.str, family="binomial")
+library(pscl)
+pR2(lr.so)
