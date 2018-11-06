@@ -26,6 +26,38 @@ indat <- indat[indat$FID != 11120,]
 indat$ppt_dif <- indat$ppt_mean - indat$ppt_pt
 allobs <- allobs[allobs$FID != 8501,]
 
+
+# Join stream order for high-res ------------------------------------------
+
+setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\nhd\\HR\\NHDPLUS_17")
+
+keeps <- c("ReachCode", "StreamOrde")
+
+for (i in 1701:1712)
+{
+  fn = paste(i, "_FlowlineVAA.csv", sep="")
+  print(fn)
+  tmpdat <- read_csv(fn)
+  tmpdat <- tmpdat[keeps]
+  
+  if (i==1701)
+  {
+    so <- tmpdat
+  }
+  else
+  {
+    so <- rbind(so, tmpdat)
+  }
+}
+
+indat <- merge(indat, so, by.x="REACHCODE", by.y="ReachCode")
+rm(so)
+rm(tmpdat)
+indat <- indat[!is.na(indat$StreamOrde),]
+
+setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
+head(indat)
+
 # Functions ---------------------------------------------------------------
 
 misclass <- function(fcode, class)
@@ -143,6 +175,7 @@ chart.Correlation(cordat, histogram=T)
 
 library(bbmle)
 library(pscl)
+library(pROC)
 #exclude wet observations before August
 moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
@@ -150,21 +183,25 @@ moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
 
 lr.spline.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
-lr.cat <- glm(mc ~ Category, data=moddat, family=binomial)
-lr.clim <- glm(mc ~ Category + climate, data=moddat, family=binomial)
-lr.climint <- glm(mc ~ Category*climate, data=moddat, family=binomial)
-lr.clim.dif <- glm(mc ~ Category + climate + pdsidif1 + pdsidif2, data=moddat, family=binomial)
-lr.clim.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + climate*Category, data=moddat, family=binomial)
+lr.spline.difso <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + StreamOrde, data=moddat, family=binomial)
+lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*StreamOrde, data=moddat, family=binomial)
+lr.so <- glm(mc ~ Category + StreamOrde, data=moddat, family=binomial)
+lr.soint <- glm(mc ~ Category*StreamOrde, data=moddat, family=binomial)
+AICctab(lr.spline.difint, lr.spline.difso, lr.so, lr.soint, lr.spline.difsoint)
+# lr.cat <- glm(mc ~ Category, data=moddat, family=binomial)
+# lr.clim <- glm(mc ~ Category + climate, data=moddat, family=binomial)
+# lr.climint <- glm(mc ~ Category*climate, data=moddat, family=binomial)
+# lr.clim.dif <- glm(mc ~ Category + climate + pdsidif1 + pdsidif2, data=moddat, family=binomial)
+# lr.clim.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + climate*Category, data=moddat, family=binomial)
 
-AICctab(lr.cat, lr.spline.difint, lr.clim, lr.climint, lr.clim.dif, lr.clim.difint)
-pR2(lr.spline.difint)
-pR2(lr.clim.difint)
-pR2(lr.clim)
-pR2(lr.climint)
-pR2(lr.cat)
+# AICctab(lr.cat, lr.spline.difint, lr.clim, lr.climint, lr.clim.dif, lr.clim.difint, lr.spline.difso, lr.so, lr.soint)
+# pR2(lr.spline.difint)
+# pR2(lr.clim.difint)
+# pR2(lr.clim)
+# pR2(lr.climint)
+# pR2(lr.cat)
 
-library(pROC)
-roc.data <- augment(lr.clim.difint)
+roc.data <- augment(lr.spline.difsoint)
 roc.spline <- roc(mc ~ plogis(.fitted), data=roc.data)
 auc(roc.spline)
 plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
