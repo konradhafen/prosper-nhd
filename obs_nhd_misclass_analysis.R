@@ -207,6 +207,23 @@ auc(roc.spline)
 plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
 
+# Plot model --------------------------------------------------------------
+
+model.data <- augment(lr.spline.difso) %>% mutate(index = 1:n())
+model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
+score <- qnorm((0.95/2) + 0.5)
+model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
+model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
+
+ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
+  geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
+  geom_line(aes(color=Category)) + 
+  geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1) +
+  facet_wrap(~as.factor.StreamOrde., ncol=3) + 
+  labs(x = "PDSI difference", y = "Probability of disagreement") +
+  theme_bw()
+
+
 # Spline model ------------------------------------------------------------
 
 moddat <- indat[indat$Month>7 & indat$Month<10 & indat$Year>0,]
