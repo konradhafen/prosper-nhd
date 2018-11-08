@@ -215,6 +215,7 @@ library(pROC)
 #exclude wet observations before August
 moddat <- indat[!(indat$Category=="Wet" & (indat$Month<8 | indat$Month>9)),]
 moddat <- indat[!is.na(indat$StreamOrde),]
+moddat <- indat[indat$StreamOrde<8,]
 
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
@@ -222,7 +223,7 @@ moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
 # Spline model with climate -----------------------------------------------
 
 lr.spline.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
-lr.spline.difso <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + as.factor(StreamOrde), data=moddat, family=binomial)
+lr.spline.difso <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + StreamOrde, data=moddat, family=binomial)
 lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*as.factor(StreamOrde), 
                           data=moddat, family=binomial)
 lr.so <- glm(mc ~ Category + as.factor(StreamOrde), data=moddat, family=binomial)
@@ -241,7 +242,7 @@ AICctab(lr.spline.difint, lr.spline.difso, lr.so, lr.soint, lr.spline.difsoint)
 # pR2(lr.climint)
 # pR2(lr.cat)
 
-roc.data <- augment(lr.spline.difso)
+roc.data <- augment(lr.spline.difsoint)
 roc.spline <- roc(mc ~ plogis(.fitted), data=roc.data)
 auc(roc.spline)
 plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
@@ -267,7 +268,7 @@ class.sum(moddat$mc, xval)
 
 # Plot model with stream order --------------------------------------------
 
-model.data <- augment(lr.spline.difso) %>% mutate(index = 1:n())
+model.data <- augment(lr.spline.difsoint) %>% mutate(index = 1:n())
 model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
 score <- qnorm((0.95/2) + 0.5)
 model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
