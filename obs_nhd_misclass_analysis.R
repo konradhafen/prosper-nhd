@@ -115,6 +115,17 @@ misclass_type <- function(nhdclass, obsclass)
   }
 }
 
+class.sum <- function(truth,predicted)
+{
+  xt=table(truth,round(predicted+0.000001))
+  pcc=round(100*sum(diag(xt))/sum(xt),2)
+  spec=round(100*xt[1,1]/sum(xt[1,]),2)
+  sens=round(100*xt[2,2]/sum(xt[2,]),2)
+  kap=round(kappa(xt)[1],4)
+  au=round(roc.area(truth,predicted)$A,4)
+  return(cbind(c("Percent Correctly Classified = ","Specificity = ","Sensitivity = ","Kappa =","AUC= "),c(pcc,spec,sens,kap,au)))
+}
+
 # Identify misclassifications ---------------------------------------------
 
 indat$mc <- mapply(misclass, indat$FCODE, indat$Category)
@@ -171,7 +182,8 @@ cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
 
-# Spline model with climate -----------------------------------------------
+
+# Subset data for logistic regression models ------------------------------
 
 library(bbmle)
 library(pscl)
@@ -182,9 +194,12 @@ moddat <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
 
+# Spline model with climate -----------------------------------------------
+
 lr.spline.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
 lr.spline.difso <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + as.factor(StreamOrde), data=moddat, family=binomial)
-lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*as.factor(StreamOrde), data=moddat, family=binomial)
+lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*as.factor(StreamOrde), 
+                          data=moddat, family=binomial)
 lr.so <- glm(mc ~ Category + as.factor(StreamOrde), data=moddat, family=binomial)
 lr.soint <- glm(mc ~ Category*as.factor(StreamOrde), data=moddat, family=binomial)
 AICctab(lr.spline.difint, lr.spline.difso, lr.so, lr.soint, lr.spline.difsoint)
@@ -207,7 +222,25 @@ auc(roc.spline)
 plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
 
-# Plot model --------------------------------------------------------------
+# 10-fold cross validation of LR model ------------------------------------
+
+library(verification)
+xval <- rep(0, nrow(moddat))
+xvs <- rep(1:10, length=nrow(moddat))
+xvs <- sample(xvs)
+for(i in 1:10)
+{
+  train <- moddat[xvs!=i,]
+  test <- moddat[xvs==i,]
+  glub <- glm(mc ~ Category, 
+              data=train, family=binomial)
+  xval[xvs==i] <- predict(glub, test, type="response")
+}
+table(moddat$mc, round(xval))
+class.sum(moddat$mc, xval)
+
+
+# Plot model with stream order --------------------------------------------
 
 model.data <- augment(lr.spline.difso) %>% mutate(index = 1:n())
 model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
