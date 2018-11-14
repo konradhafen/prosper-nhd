@@ -59,6 +59,32 @@ mergedat <- mergedat[!is.na(mergedat$StreamOrde),]
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
+
+# Read DBF files for metadata, join to observations -----------------------
+
+library(sf)
+setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\nhd\\HR")
+
+for (i in 1:12)
+{
+  gdb <- paste("NHDPLUS_H_17", sprintf("%02d", i), "_HU4_GDB/NHDPLUS_H_17", sprintf("%02d", i), "_HU4_GDB.gdb", sep="")
+  link <- sf::st_read(dsn=gdb, layer="NHDFeatureToMetadata")
+  md <- sf::st_read(dsn=gdb, layer="NHDMetadata")
+  if (i==1)
+  {
+    links <- link
+    metadata <- md
+  }
+  else
+  {
+    links <- rbind(links, link)
+    metadata <- rbind(metadata, md)
+  }
+}
+metadatai <- merge(links, metadata, by.x="Meta_ProcessID", by.y="Meta_ProcessID")
+metadataf <- merge(indat, metadatai, by.x="REACHCODE", by.y="Permanent_Identifier")
+setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
+
 # Functions ---------------------------------------------------------------
 
 misclass <- function(fcode, class)
