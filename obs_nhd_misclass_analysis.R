@@ -81,8 +81,9 @@ for (i in 1:12)
     metadata <- rbind(metadata, md)
   }
 }
-metadatai <- merge(links, metadata, by.x="Meta_ProcessID", by.y="Meta_ProcessID")
-metadataf <- merge(indat, metadatai, by.x="REACHCODE", by.y="Permanent_Identifier")
+linksf <- merge(indat, links, by.x="REACHCODE", by.y="Permanent_Identifier")
+metadataf <- merge(linksf, metadata, by.x="Meta_ProcessID", by.y="Meta_ProcessID")
+#metadataf <- merge(indat, metadatai, by.x="REACHCODE", by.y="Permanent_Identifier")
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
 # Functions ---------------------------------------------------------------
