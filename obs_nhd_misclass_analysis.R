@@ -3,6 +3,7 @@
 
 rm(list=ls())
 options(scipen=999)
+library(tidyverse)
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
@@ -55,7 +56,7 @@ print(nrow(so)==length(unique(so$ReachCode)))
 indat <- merge(indat, so, by.x="REACHCODE", by.y="ReachCode", all.x=T)
 rm(so)
 rm(tmpdat)
-mergedat <- mergedat[!is.na(mergedat$StreamOrde),]
+mergedat <- indat[!is.na(indat$StreamOrde),]
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
@@ -226,6 +227,12 @@ sum(mrhr.dry$mctypehr=="NHD wet Observation dry")/nrow(mrhr.dry)
 writeobs <- allobs[,c("FID", "nhdclass", "mc", "mctype")]
 write_csv(writeobs, "misclassifications_obs_nhd.csv")
 
+
+# Save csv with stream order ----------------------------------------------
+
+writeobs <- indat[,c("FID", "nhdclass", "mc", "mctype", "StreamOrde")]
+write_csv(writeobs, "misclassifications_obs_nhd_so.csv")
+
 # Correlation -------------------------------------------------------------
 
 names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
@@ -233,6 +240,19 @@ cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
 
+
+# Plot miscalssifications by stream order ---------------------------------
+
+library(reshape2)
+plotdat <- indat[, c("StreamOrde", "mc")]
+freq <- as.matrix(table(plotdat))
+StreamOrder <- seq(1:9)
+plotdf <- data.frame(cbind(freq), StreamOrder)
+colnames(plotdf) <- c("Agree", "Disagree", "StreamOrder")
+plotdf.melt <- melt(plotdf, id.vars="StreamOrder")
+
+ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) + 
+  geom_bar(aes(fill=variable), position="dodge", stat="identity")
 
 # Subset data for logistic regression models ------------------------------
 
