@@ -240,7 +240,6 @@ cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
 
-
 # Plot miscalssifications by stream order ---------------------------------
 
 library(reshape2)
@@ -252,7 +251,11 @@ colnames(plotdf) <- c("Agree", "Disagree", "StreamOrder")
 plotdf.melt <- melt(plotdf, id.vars="StreamOrder")
 
 ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) + 
-  geom_bar(aes(fill=variable), position="dodge", stat="identity")
+  geom_bar(aes(fill=variable), position="dodge", stat="identity") + 
+  scale_fill_manual(values=c("#0c51fd", "#fb0026")) +
+  labs(x="Stream Order", y="Count") + 
+  theme_bw() +
+  theme(legend.position =c(0.98,0.98), legend.justification = c(1,1), legend.title = element_blank())
 
 # Subset data for logistic regression models ------------------------------
 
@@ -325,6 +328,7 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
   geom_line(aes(color=Category)) + 
   geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1) +
+  scale_color_manual(values=c("#fb0026", "#0c51fd")) +
   facet_wrap(~as.factor.StreamOrde., ncol=3) + 
   labs(x = "PDSI difference", y = "Probability of disagreement") +
   theme_bw()
