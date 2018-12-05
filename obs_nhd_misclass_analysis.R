@@ -240,6 +240,14 @@ cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
 
+# Histogram of year differences -------------------------------------------
+
+ggplot(indat, aes(x=yeard)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq(0,70,10)) +
+  labs(y="Count", x="Years between streamflow observation and NHD field verification") + 
+  theme_bw()
+
 # Plot miscalssifications by stream order ---------------------------------
 
 library(reshape2)
