@@ -309,6 +309,7 @@ plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 # 10-fold cross validation of LR model ------------------------------------
 
 library(verification)
+set.seed(1) #for replicability
 xval <- rep(0, nrow(moddat))
 xvs <- rep(1:10, length=nrow(moddat))
 xvs <- sample(xvs)
@@ -341,6 +342,8 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   labs(x = "PDSI difference", y = "Probability of disagreement", color = "Observation type") +
   theme_bw()+
   theme(legend.position =c(0.98,0.19), legend.justification = c(1,1))
+
+#dimensions: 336w 672h
 
 
 # Spline model ------------------------------------------------------------
