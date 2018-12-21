@@ -128,7 +128,11 @@ ggplot(plotdat, aes(as.factor(Month))) +
 
 plotdat <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
 
-ggplot(plotdat, aes(mctype)) +
+plotdat$lab <- plotdat$mctype
+plotdat$lab <- ifelse(plotdat$lab == "NHD dry Observation wet", "NHD intermittent,\nObservation wet", plotdat$lab)
+plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\nObservation dry", plotdat$lab)
+
+ggplot(plotdat, aes(lab)) +
   geom_bar(width=0.65) + 
   labs(x="", y="Observation count") +
   theme_bw()
