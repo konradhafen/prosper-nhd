@@ -126,18 +126,47 @@ ggplot(plotdat, aes(as.factor(Month))) +
 
 # Plot total disagreement -------------------------------------------------
 
-plotdat <- allobs[!(allobs$Category=="Wet" & allobs$Month<8),]
+plotdat <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
 
-plotdat$lab <- plotdat$mctype
+plotdat$lab <- plotdat$mctypehr
 plotdat$lab <- ifelse(plotdat$lab == "NHD dry Observation wet", "NHD intermittent,\nObservation wet", plotdat$lab)
 plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\nObservation dry", plotdat$lab)
 
 ggplot(plotdat, aes(lab)) +
   geom_bar(width=0.65) + 
   labs(x="", y="Observation count") +
-  theme_bw()
+  ggtitle("Disagreement with NHD-HR") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        axis.title=element_text(size=14), axis.text=element_text(size=12), 
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)))
 
-#Plot dimensions 550x400
+ggsave("C:/Users/khafe/Downloads/disagreement_hr.png", plot = last_plot(), width = 8, height = 6, units = "in", bg = "transparent")
+
+
+
+# Plot total disagreement (NHD-MR) ----------------------------------------
+
+plotdat <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
+
+plotdat$lab <- plotdat$mctypemr
+plotdat$lab <- ifelse(plotdat$lab == "NHD dry Observation wet", "NHD intermittent,\nObservation wet", plotdat$lab)
+plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\nObservation dry", plotdat$lab)
+
+ggplot(plotdat, aes(lab)) +
+  geom_bar(width=0.65) + 
+  labs(x="", y="Observation count") +
+  ggtitle("Disagreement with NHD-MR Plus V2") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        axis.title=element_text(size=14), axis.text=element_text(size=12), 
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)))
+
+ggsave("C:/Users/khafe/Downloads/disagreement_mr.png", plot = last_plot(), width = 8, height = 6, units = "in", bg = "transparent")
 
 # Plot misclassifications by month ----------------------------------------
 
