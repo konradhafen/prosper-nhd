@@ -251,7 +251,9 @@ ggplot(indat, aes(x=yeard)) +
 # Plot miscalssifications by stream order ---------------------------------
 
 library(reshape2)
-plotdat <- indat[, c("StreamOrde", "mc")]
+plotdat <- indat[!(indat$Category=="Wet" & (indat$Month<8 | indat$Month>9)), c("StreamOrde", "mc")]
+plotdat <- plotdat[!is.na(plotdat$StreamOrde),]
+#plotdat <- indat[, c("StreamOrde", "mc")]
 freq <- as.matrix(table(plotdat))
 StreamOrder <- seq(1:9)
 plotdf <- data.frame(cbind(freq), StreamOrder)
@@ -262,8 +264,17 @@ ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) +
   geom_bar(aes(fill=variable), position="dodge", stat="identity") + 
   scale_fill_manual(values=c("#0c51fd", "#fb0026")) +
   labs(x="Stream Order", y="Count") + 
-  theme_bw() +
+  ggtitle("Disagreement by Stream Order (NHDPlus-HR)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        axis.title=element_text(size=14), axis.text=element_text(size=12),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)),
+        axis.title.x = element_text(margin=margin(t=10, r=0, b=0, l=0))) +
   theme(legend.position =c(0.98,0.98), legend.justification = c(1,1), legend.title = element_blank())
+
+ggsave("C:/Users/khafe/Downloads/disagreement_so_hr.png", plot = last_plot(), width = 10, height = 6, units = "in", bg = "transparent")
 
 # Subset data for logistic regression models ------------------------------
 
@@ -338,12 +349,19 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   geom_line(aes(color=Category)) + 
   geom_point(aes(pdsi_dif, mc, colour=Category), alpha=0.1) +
   scale_color_manual(values=c("#fb0026", "#0c51fd")) +
-  facet_wrap(~as.factor.StreamOrde., ncol=2) + 
+  facet_wrap(~as.factor.StreamOrde., ncol=3) + 
   labs(x = "PDSI difference", y = "Probability of disagreement", color = "Observation type") +
-  theme_bw()+
-  theme(legend.position =c(0.98,0.19), legend.justification = c(1,1))
+  ggtitle("Probability of Disagreement by Stream Order (NHDPlus-HR)") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        axis.title=element_text(size=14), axis.text=element_text(size=12),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)),
+        axis.title.x = element_text(margin=margin(t=10, r=0, b=0, l=0))) +
+  theme(legend.position =c(0.97,0.22), legend.justification = c(1,1))
 
-#dimensions: 336w 672h
+ggsave("C:/Users/khafe/Downloads/lr_model.png", plot = last_plot(), width = 10, height = 6.5, units = "in", bg = "transparent")
 
 
 # Spline model ------------------------------------------------------------

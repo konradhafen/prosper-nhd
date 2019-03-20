@@ -135,7 +135,7 @@ plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\
 ggplot(plotdat, aes(lab)) +
   geom_bar(width=0.65) + 
   labs(x="", y="Observation count") +
-  ggtitle("Disagreement with NHD-HR") +
+  ggtitle("Disagreement with NHDPlus-HR") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
         plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
@@ -158,7 +158,7 @@ plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\
 ggplot(plotdat, aes(lab)) +
   geom_bar(width=0.65) + 
   labs(x="", y="Observation count") +
-  ggtitle("Disagreement with NHD-MR Plus V2") +
+  ggtitle("Disagreement with NHDPlus-MR V2") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
         plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
