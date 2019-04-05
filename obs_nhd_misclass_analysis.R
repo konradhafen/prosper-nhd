@@ -239,7 +239,6 @@ names <- c("pdsi_mean", "ppt_mean", "ppt_pt", "pdsi_pt", "pdsi_dif")
 cordat <- indat[,names]
 chart.Correlation(cordat, histogram=T)
 
-
 # Histogram of year differences -------------------------------------------
 
 ggplot(indat, aes(x=yeard)) + 
@@ -283,8 +282,8 @@ library(pscl)
 library(pROC)
 #exclude wet observations before August
 moddat <- indat[!(indat$Category=="Wet" & (indat$Month<8 | indat$Month>9)),]
-moddat <- indat[!is.na(indat$StreamOrde),]
-moddat <- indat[indat$StreamOrde<8,]
+moddat <- moddat[!is.na(moddat$StreamOrde),]
+moddat <- moddat[moddat$StreamOrde<8,]
 
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
