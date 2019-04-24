@@ -124,17 +124,57 @@ ggplot(plotdat, aes(as.factor(Month))) +
 #Plot dimensions 700x375 
 
 
+# Plot disagreement for MR and HR -----------------------------------------
+
+plotdat <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
+
+plotdat$labhr <- plotdat$mctypehr
+plotdat$labhr <- ifelse(plotdat$labhr == "NHD dry Observation wet", 2, plotdat$labhr)
+plotdat$labhr <- ifelse(plotdat$labhr == "NHD wet Observation dry", 3, plotdat$labhr)
+plotdat$labhr <- ifelse(plotdat$labhr > 1 & plotdat$labhr < 4,  plotdat$labhr, 1)
+
+plotdat$labmr <- plotdat$mctypemr
+plotdat$labmr <- ifelse(plotdat$labmr == "NHD dry Observation wet", 2, plotdat$labmr)
+plotdat$labmr <- ifelse(plotdat$labmr == "NHD wet Observation dry", 3, plotdat$labmr)
+plotdat$labmr <- ifelse(plotdat$labmr > 1 & plotdat$labmr < 4,  plotdat$labmr, 1)
+
+#melt the data
+library(reshape2)
+meltdat = plotdat[,c("labmr", "labhr")]
+colnames(meltdat) <- c('NHD-MR', 'NHD-HR')
+meltdat <- melt(meltdat, measure.vars = c('NHD-MR', 'NHD-HR'))
+
+ggplot(meltdat, aes(x=value, y=2*100*(..count..)/sum(..count..), fill=variable)) +
+  geom_bar(position='dodge', colour='black') +
+  labs(x="", y="Percent of observations") +
+  scale_x_discrete(breaks=1:3, labels=c("Agree", "NHD non-perennial,\nObservation wet", "NHD perennial,\nObservation dry")) +
+  scale_fill_manual(values=c('gray45', 'white')) +
+  theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        axis.title=element_text(size=14), axis.text=element_text(size=12), 
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)),
+        legend.position = c(0.98,0.98), legend.justification = c(1,1),
+        legend.title = element_blank())
+ggsave("C:/Users/khafe/Downloads/disagreement_all.png", plot = last_plot(), 
+       width = 8, height = 6, units = "in", bg = "transparent")
+ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all.png", plot = last_plot(), 
+       width = 8, height = 6, units = "in", bg = "white")
+
+
 # Plot total disagreement -------------------------------------------------
 
 plotdat <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
 
 plotdat$lab <- plotdat$mctypehr
-plotdat$lab <- ifelse(plotdat$lab == "NHD dry Observation wet", "NHD intermittent,\nObservation wet", plotdat$lab)
+plotdat$lab <- ifelse(plotdat$lab == "NHD dry Observation wet", "NHD non-perennial,\nObservation wet", plotdat$lab)
 plotdat$lab <- ifelse(plotdat$lab == "NHD wet Observation dry", "NHD perennial,\nObservation dry", plotdat$lab)
 
-ggplot(plotdat, aes(lab)) +
-  geom_bar(width=0.65) + 
-  labs(x="", y="Observation count") +
+ggplot() +
+  geom_bar(data=plotdat, aes(x=lab, y=100*(..count..)/sum(..count..)), width=0.65) +
+  labs(x="", y="Percent of observations") +
   ggtitle("Disagreement with NHDPlus-HR") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
