@@ -157,7 +157,8 @@ ggplot(meltdat, aes(x=value, y=2*100*(..count..)/sum(..count..), fill=variable))
         plot.background = element_rect(fill = "transparent", color = NA), 
         axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)),
         legend.position = c(0.98,0.98), legend.justification = c(1,1),
-        legend.title = element_blank())
+        legend.title = element_blank(), 
+        legend.text = element_text(size=12))
 ggsave("C:/Users/khafe/Downloads/disagreement_all.png", plot = last_plot(), 
        width = 8, height = 6, units = "in", bg = "transparent")
 ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all.png", plot = last_plot(), 
