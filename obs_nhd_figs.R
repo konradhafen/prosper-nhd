@@ -117,11 +117,21 @@ ggplot(plotdat, aes(as.factor(Month))) +
   scale_x_discrete(breaks=0:12, labels=c("Not\nrecorded", "Jan", "Feb", "Mar", "Apr", 
                                            "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
                                            "Nov", "Dec")) +
-  labs(x="Month", y="Observation count", fill="Observation\nResult") +
-  theme_bw() + 
-  theme(legend.position = c(0.98,0.98), legend.justification = c(1,1))
+  labs(x="Month", y="Observation count") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
+        axis.title=element_text(size=14), axis.text=element_text(size=12),
+        plot.title=element_text(size=16, face="bold", margin=margin(t=0, r=0, b=20, l=0)),
+        plot.background = element_rect(fill = "transparent", color = NA), 
+        axis.title.y = element_text(margin=margin(t=0, r=20, b=0, l=0)),
+        axis.title.x = element_text(margin=margin(t=10, r=0, b=0, l=0))) +
+  theme(legend.position = c(0.98,0.98), legend.justification = c(1,1), legend.title = element_blank())
 
 #Plot dimensions 700x375 
+
+# Save plot ---------------------------------------------------------------
+
+ggsave("C:/Users/khafe/Downloads/disagreement_month_hr.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
 
 
 # Plot disagreement for MR and HR -----------------------------------------

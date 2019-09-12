@@ -3,16 +3,17 @@
 
 rm(list=ls())
 options(scipen=999)
-library(tidyverse)
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
 
 #contains info from points where quad data a climate data exist
 fn <- "obs_hr_nhd_scpdsi_p.csv"
 fn <- "obs_hr_nhd_scpdsi_climate.csv"
+fn2 <- "obs_hr_nhd_scpdsi_climate_catseed.csv" #For this one, rvalue == 2147483648 indicates points not on NHD grid/lines
 
 library(tidyverse)
 library(broom)
+#library(multcomp)
 #library(reshape2)
 #library(plyr)
 
@@ -222,6 +223,11 @@ sum(mrhr.dry$mctypehr=="NHD wet Observation dry")/nrow(mrhr.dry)
 # agct <- indat %>% group_by(id) %>% summarise(n=n(), tot=sum(wet), per=tot/n)
 
 
+
+# Remove points that are not on catseed grid ------------------------------
+
+indat <- indat[indat$rvalue_1 != 2147483648,]
+
 # Save csv ----------------------------------------------------------------
 
 writeobs <- allobs[,c("FID", "nhdclass", "mc", "mctype")]
@@ -273,7 +279,10 @@ ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) +
         axis.title.x = element_text(margin=margin(t=10, r=0, b=0, l=0))) +
   theme(legend.position =c(0.98,0.98), legend.justification = c(1,1), legend.title = element_blank())
 
-ggsave("C:/Users/khafe/Downloads/disagreement_so_hr.png", plot = last_plot(), width = 10, height = 6, units = "in", bg = "transparent")
+
+# Save plot ---------------------------------------------------------------
+
+ggsave("C:/Users/khafe/Downloads/disagreement_so_hr.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
 
 # Subset data for logistic regression models ------------------------------
 
@@ -287,16 +296,18 @@ moddat <- moddat[moddat$StreamOrde<8,]
 
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
+moddat$StreamOrde <- factor(moddat$StreamOrde)
 
 # Spline model with climate -----------------------------------------------
 
 lr.spline.difint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2, data=moddat, family=binomial)
 lr.spline.difso <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + StreamOrde, data=moddat, family=binomial)
-lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*as.factor(StreamOrde), 
+lr.spline.difsoint <- glm(mc ~ Category*pdsidif1 + Category*pdsidif2 + Category*StreamOrde, 
                           data=moddat, family=binomial)
 lr.so <- glm(mc ~ Category + as.factor(StreamOrde), data=moddat, family=binomial)
 lr.soint <- glm(mc ~ Category*as.factor(StreamOrde), data=moddat, family=binomial)
-AICctab(lr.spline.difint, lr.spline.difso, lr.so, lr.soint, lr.spline.difsoint)
+lr.ot <- glm(mc ~ Category, data=moddat, family=binomial)
+AICctab(lr.spline.difint, lr.spline.difso, lr.so, lr.soint, lr.spline.difsoint, lr.ot)
 # lr.cat <- glm(mc ~ Category, data=moddat, family=binomial)
 # lr.clim <- glm(mc ~ Category + climate, data=moddat, family=binomial)
 # lr.climint <- glm(mc ~ Category*climate, data=moddat, family=binomial)
@@ -367,6 +378,10 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
         legend.justification = c(1,1), 
         legend.title = element_text(size=14), 
         legend.text = element_text(size=12))
+
+
+
+# Save figure -------------------------------------------------------------
 
 ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/lr_model.png", plot = last_plot(), 
        width = 7, height = 4.5, units = "in", bg = "white", dpi=300)
