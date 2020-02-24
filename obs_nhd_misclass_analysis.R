@@ -1,4 +1,19 @@
 
+
+# Try with full dataset to get Object ID to McShane data release ----------
+
+rm(list=ls())
+options(scipen=999)
+
+setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\outputs\\csv")
+
+fn = "obs_hr_nhd_scpdsi_withObjectID.csv"
+
+library(tidyverse)
+library(broom)
+
+indat <- as.data.frame(read_csv(fn))
+
 # Do setup ----------------------------------------------------------------
 
 rm(list=ls())
@@ -33,7 +48,7 @@ allobs <- allobs[allobs$FID != 8501,]
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\nhd\\HR\\NHDPLUS_17")
 
-keeps <- c("ReachCode", "StreamOrde")
+keeps <- c("ReachCode", "StreamOrde", "TotDASqKm")  # get reach code, stream order and drainage area
 
 for (i in 1701:1712)
 {
@@ -266,8 +281,8 @@ colnames(plotdf) <- c("Agree", "Disagree", "StreamOrder")
 plotdf.melt <- melt(plotdf, id.vars="StreamOrder")
 
 ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) + 
-  geom_bar(aes(fill=variable), position="dodge", stat="identity") + 
-  scale_fill_manual(values=c("#0c51fd", "#fb0026")) +
+  geom_bar(aes(fill=variable), position="dodge", stat="identity", colour="black") + 
+  scale_fill_manual(values=c("gray45", "white")) +
   labs(x="Stream Order", y="Count") + 
   ggtitle("Disagreement by Stream Order (NHDPlus-HR)") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -282,7 +297,7 @@ ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) +
 
 # Save plot ---------------------------------------------------------------
 
-ggsave("C:/Users/khafe/Downloads/disagreement_so_hr.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
+ggsave("C:/Users/khafe/Downloads/disagreement_so_hr_bw.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
 
 # Subset data for logistic regression models ------------------------------
 
@@ -293,6 +308,9 @@ library(pROC)
 moddat <- indat[!(indat$Category=="Wet" & (indat$Month<8 | indat$Month>9)),]
 moddat <- moddat[!is.na(moddat$StreamOrde),]
 moddat <- moddat[moddat$StreamOrde<8,]
+#moddat <- moddat[complete.cases(moddat$wyPDSI),]
+#moddat <- moddat[complete.cases(moddat$pdsi_mean)]
+#moddat$pdsi_dif <- (moddat$pdsi_mean + 100) - (moddat$wyPDSI+100)
 
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
@@ -353,7 +371,8 @@ model.data$pdsi_dif <- model.data$pdsidif1 + model.data$pdsidif2
 score <- qnorm((0.95/2) + 0.5)
 model.data$lwr <- plogis(model.data$.fitted-score*model.data$.se.fit)
 model.data$upr <- plogis(model.data$.fitted+score*model.data$.se.fit)
-model.data$panelname <- paste("Stream Order:", model.data$as.factor.StreamOrde.)
+model.data$panelname <- paste("Stream Order:", model.data$StreamOrde)
+#model.data$panelname <- paste("Stream Order:", model.data$as.factor.StreamOrde.)
 
 ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
   geom_ribbon(aes(x=pdsi_dif, ymin=lwr, ymax=upr, group=Category), alpha = 0.2) + 
@@ -383,7 +402,7 @@ ggplot(model.data, aes(pdsi_dif, plogis(.fitted))) +
 
 # Save figure -------------------------------------------------------------
 
-ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/lr_model.png", plot = last_plot(), 
+ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/lr_model_v2.png", plot = last_plot(), 
        width = 7, height = 4.5, units = "in", bg = "white", dpi=300)
 
 
