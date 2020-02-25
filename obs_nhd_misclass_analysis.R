@@ -308,6 +308,9 @@ library(pROC)
 moddat <- indat[!(indat$Category=="Wet" & (indat$Month<8 | indat$Month>9)),]
 moddat <- moddat[!is.na(moddat$StreamOrde),]
 moddat <- moddat[moddat$StreamOrde<8,]
+###################################################################################################
+# Use these lines when using the first section above (full dataset)
+###################################################################################################
 #moddat <- moddat[complete.cases(moddat$wyPDSI),]
 #moddat <- moddat[complete.cases(moddat$pdsi_mean)]
 #moddat$pdsi_dif <- (moddat$pdsi_mean + 100) - (moddat$wyPDSI+100)
@@ -344,6 +347,19 @@ roc.spline <- roc(mc ~ plogis(.fitted), data=roc.data)
 auc(roc.spline)
 plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
+
+
+# Subset and save csv for data release ------------------------------------
+
+keeps <- c("OBJECTID", "Date", "Category", "Year", "Month", "wyPDSI", "chck_year", "REACHCODE", "FCODE", "quad_mean",  
+           "StreamOrde", "mc", "nhdclass", "mctype", "pdsi_dif", "pdsidif1", "pdsidif2")
+
+printdat <- moddat[, keeps]
+
+cnames <- c("PtID", "Date", "Category", "Year", "Month", "PtPdsi", "NhdYear", "REACHCODE", "FCODE", "NhdPdsi",  
+            "StrOrd", "Disagree", "NhdClass", "DisTyp", "dPdsi", "dPdsiLT0", "dPdsiGT0")
+colnames(printdat) <- cnames
+write.csv(printdat, "data_release.csv", row.names=F)
 
 # 10-fold cross validation of LR model ------------------------------------
 

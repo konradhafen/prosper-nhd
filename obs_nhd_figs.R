@@ -136,7 +136,7 @@ ggsave("C:/Users/khafe/Downloads/disagreement_month_hr.png", plot = last_plot(),
 
 # Plot disagreement for MR and HR -----------------------------------------
 
-plotdat <- allmrhr[!(allmrhr$Category=="Wet" & allmrhr$Month<8),]
+plotdat <- allmrhr[!(allmrhr$Category=="Wet" & (allmrhr$Month<8 | allmrhr$Month>9)),]
 
 plotdat$labhr <- plotdat$mctypehr
 plotdat$labhr <- ifelse(plotdat$labhr == "NHD dry Observation wet", 2, plotdat$labhr)
@@ -169,9 +169,9 @@ ggplot(meltdat, aes(x=value, y=2*100*(..count..)/sum(..count..), fill=variable))
         legend.position = c(0.98,0.98), legend.justification = c(1,1),
         legend.title = element_blank(), 
         legend.text = element_text(size=12))
-ggsave("C:/Users/khafe/Downloads/disagreement_all.png", plot = last_plot(), 
+ggsave("C:/Users/khafe/Downloads/disagreement_all_v2.png", plot = last_plot(), 
        width = 8, height = 6, units = "in", bg = "transparent")
-ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all.png", plot = last_plot(), 
+ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all_v2.png", plot = last_plot(), 
        width = 8, height = 6, units = "in", bg = "white")
 
 
