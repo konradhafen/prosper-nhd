@@ -311,9 +311,10 @@ moddat <- moddat[moddat$StreamOrde<8,]
 ###################################################################################################
 # Use these lines when using the first section above (full dataset)
 ###################################################################################################
-#moddat <- moddat[complete.cases(moddat$wyPDSI),]
-#moddat <- moddat[complete.cases(moddat$pdsi_mean)]
-#moddat$pdsi_dif <- (moddat$pdsi_mean + 100) - (moddat$wyPDSI+100)
+moddat <- moddat[complete.cases(moddat$wyPDSI),]  # exclude points that do not have pdsi value
+moddat <- moddat[complete.cases(moddat$pdsi_mean),]  # exclude quads that do not have pdsi value
+moddat <- moddat[moddat$NEAR_DIST < 100.0,]  # exclude points greater than 100 m from NHD-HR reach
+moddat$pdsi_dif <- (moddat$quad_mean + 100) - (moddat$wyPDSI+100)
 
 moddat$pdsidif1 <- ifelse(moddat$pdsi_dif<0, moddat$pdsi_dif, 0)
 moddat$pdsidif2 <- ifelse(moddat$pdsi_dif>=0, moddat$pdsi_dif, 0)
@@ -351,7 +352,7 @@ plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 
 # Subset and save csv for data release ------------------------------------
 
-keeps <- c("OBJECTID", "Date", "Category", "Year", "Month", "wyPDSI", "chck_year", "REACHCODE", "FCODE", "quad_mean",  
+keeps <- c("OBJECTID", "Date", "Category", "Year", "Month", "wyPDSI", "chck_year", "REACHCODE", "FCODE", "pdsi_mean",  
            "StreamOrde", "mc", "nhdclass", "mctype", "pdsi_dif", "pdsidif1", "pdsidif2")
 
 printdat <- moddat[, keeps]
@@ -359,7 +360,7 @@ printdat <- moddat[, keeps]
 cnames <- c("PtID", "Date", "Category", "Year", "Month", "PtPdsi", "NhdYear", "REACHCODE", "FCODE", "NhdPdsi",  
             "StrOrd", "Disagree", "NhdClass", "DisTyp", "dPdsi", "dPdsiLT0", "dPdsiGT0")
 colnames(printdat) <- cnames
-write.csv(printdat, "data_release.csv", row.names=F)
+write.csv(printdat, "nhd_pdsi_analysis.csv", row.names=F)
 
 # 10-fold cross validation of LR model ------------------------------------
 
