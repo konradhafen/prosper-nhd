@@ -23,7 +23,8 @@ allmrhr <- as.data.frame(read_csv("all_obs_mr_hr.csv"))
 # remove observation where FCODE may be incorrect
 indat <- indat[indat$FID != 11120,]
 indat$ppt_dif <- indat$ppt_mean - indat$ppt_pt
-allobs <- allobs[allobs$FID != 8501,]
+#allobs <- allobs[allobs$FID != 8501,]
+allobs <- allobs[allobs$NEAR_DIST < 100.0,]
 indat.dry <- indat[!(indat$Category=="Wet" & indat$Month<8),]
 
 # Functions ---------------------------------------------------------------
@@ -117,7 +118,7 @@ ggplot(plotdat, aes(as.factor(Month))) +
   scale_x_discrete(breaks=0:12, labels=c("Not\nrecorded", "Jan", "Feb", "Mar", "Apr", 
                                            "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
                                            "Nov", "Dec")) +
-  labs(x="Month", y="Observation count") +
+  labs(x="Month", y="NNO count") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
         axis.title=element_text(size=14), axis.text=element_text(size=12),
@@ -131,7 +132,10 @@ ggplot(plotdat, aes(as.factor(Month))) +
 
 # Save plot ---------------------------------------------------------------
 
-ggsave("C:/Users/khafe/Downloads/disagreement_month_hr.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
+ggsave("E:\\konrad\\Projects\\usgs\\prosper-nhd\\figs\\figs\\wet_dry_month.png", plot = last_plot(), 
+       width = 7, height = 4.5, units = "in", bg = "transparent")
+
+#ggsave("C:/Users/khafe/Downloads/disagreement_month_hr.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
 
 
 # Plot disagreement for MR and HR -----------------------------------------
@@ -156,8 +160,8 @@ meltdat <- melt(meltdat, measure.vars = c('NHD-MR', 'NHD-HR'))
 
 ggplot(meltdat, aes(x=value, y=2*100*(..count..)/sum(..count..), fill=variable)) +
   geom_bar(position='dodge', colour='black') +
-  labs(x="", y="Percent of observations") +
-  scale_x_discrete(breaks=1:3, labels=c("Agree", "NHD non-perennial,\nObservation wet", "NHD perennial,\nObservation dry")) +
+  labs(x="", y="Percent of NNOs") +
+  scale_x_discrete(breaks=1:3, labels=c("Agree", "NHD non-perennial,\nNNO wet", "NHD perennial,\nNNO dry")) +
   scale_fill_manual(values=c('gray45', 'white')) +
   theme(legend.position = c(0.98,0.98), legend.justification = c(1,1)) +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -169,9 +173,9 @@ ggplot(meltdat, aes(x=value, y=2*100*(..count..)/sum(..count..), fill=variable))
         legend.position = c(0.98,0.98), legend.justification = c(1,1),
         legend.title = element_blank(), 
         legend.text = element_text(size=12))
-ggsave("C:/Users/khafe/Downloads/disagreement_all_v2.png", plot = last_plot(), 
+ggsave("C:/Users/khafe/Downloads/disagreement_all_v3.png", plot = last_plot(), 
        width = 8, height = 6, units = "in", bg = "transparent")
-ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all_v2.png", plot = last_plot(), 
+ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_all_v3.png", plot = last_plot(), 
        width = 8, height = 6, units = "in", bg = "white")
 
 

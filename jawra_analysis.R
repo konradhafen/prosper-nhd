@@ -16,6 +16,8 @@ indat <- as.data.frame(read_csv(fn))
 
 # Logisitc regression -----------------------------------------------------
 
+indat$dPdsiLT0 <- ifelse(indat$dPdsi<0, indat$dPdsi, 0)
+indat$dPdsiGT0 <- ifelse(indat$dPdsi>=0, indat$dPdsi, 0)
 lr.spline.difsoint <- glm(Disagree ~ Category*dPdsiLT0 + Category*dPdsiGT0 + Category*as.factor(StrOrd), 
                           data=indat, family=binomial)
 

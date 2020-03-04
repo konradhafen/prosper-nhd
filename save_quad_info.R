@@ -24,8 +24,11 @@ outdat <- indat[, keeps]
 
 colnames(outdat) <- c("US_7_ID", "ClassYear", "pdsi", "ppt_per")
 
+#outdat <- outdat[complete.cases(outdat$pdsi),]
+#outdat <- outdat[complete.cases(outdat$ppt_per),]
+
 
 # Print output file -------------------------------------------------------
 
 setwd("E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\data_release\\FINAL")
-write.csv(outdat, "quad_extent_data.csv")
+write.csv(outdat, "quad_extent_data.csv", row.names=F)

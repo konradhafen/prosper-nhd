@@ -279,12 +279,12 @@ StreamOrder <- seq(1:9)
 plotdf <- data.frame(cbind(freq), StreamOrder)
 colnames(plotdf) <- c("Agree", "Disagree", "StreamOrder")
 plotdf.melt <- melt(plotdf, id.vars="StreamOrder")
+plotdf.melt <- plotdf.melt[plotdf.melt$StreamOrder < 8,]
 
 ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) + 
   geom_bar(aes(fill=variable), position="dodge", stat="identity", colour="black") + 
   scale_fill_manual(values=c("gray45", "white")) +
   labs(x="Stream Order", y="Count") + 
-  ggtitle("Disagreement by Stream Order (NHDPlus-HR)") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_rect(fill = "transparent"), axis.line = element_line(colour = "black"),
         axis.title=element_text(size=14), axis.text=element_text(size=12),
@@ -297,7 +297,10 @@ ggplot(plotdf.melt, aes(as.factor(StreamOrder), value)) +
 
 # Save plot ---------------------------------------------------------------
 
-ggsave("C:/Users/khafe/Downloads/disagreement_so_hr_bw.png", plot = last_plot(), width = 7, height = 4.5, units = "in", bg = "transparent")
+ggsave("C:/Users/khafe/Downloads/disagreement_so_hr_bw.png", plot = last_plot(), 
+       width = 7, height = 4.5, units = "in", bg = "transparent")
+ggsave("E:/konrad/Projects/usgs/prosper-nhd/figs/figs/disagreement_so_hr_bw.png", plot = last_plot(), 
+       width = 8, height = 6, units = "in", bg = "white")
 
 # Subset data for logistic regression models ------------------------------
 
@@ -353,12 +356,12 @@ plot.roc(roc.spline, xlim=c(0,1), ylim=c(0,1))
 # Subset and save csv for data release ------------------------------------
 
 keeps <- c("OBJECTID", "Date", "Category", "Year", "Month", "wyPDSI", "chck_year", "REACHCODE", "FCODE", "pdsi_mean",  
-           "StreamOrde", "mc", "nhdclass", "mctype", "pdsi_dif", "pdsidif1", "pdsidif2")
+           "StreamOrde", "mc", "nhdclass", "mctype", "pdsi_dif")
 
 printdat <- moddat[, keeps]
 
 cnames <- c("PtID", "Date", "Category", "Year", "Month", "PtPdsi", "NhdYear", "REACHCODE", "FCODE", "NhdPdsi",  
-            "StrOrd", "Disagree", "NhdClass", "DisTyp", "dPdsi", "dPdsiLT0", "dPdsiGT0")
+            "StrOrd", "Disagree", "NhdClass", "DisTyp", "dPdsi")
 colnames(printdat) <- cnames
 write.csv(printdat, "nhd_pdsi_analysis.csv", row.names=F)
 
