@@ -12,6 +12,9 @@ library(tidyverse)
 library(broom)
 
 indat <- as.data.frame(read_csv(fn))
+dpdsi <- indat$dPdsi
+indat$dPdsi <- (indat$NhdPdsi + 100) - (indat$PtPdsi + 100)
+write.csv(indat,"E:\\konrad\\Projects\\usgs\\prosper-nhd\\data\\data_release\\PRE\\nhd_pdsi_analysis.csv")
 
 
 # Logisitc regression -----------------------------------------------------
@@ -22,6 +25,7 @@ lr.spline.difsoint <- glm(Disagree ~ Category*dPdsiLT0 + Category*dPdsiGT0 + Cat
                           data=indat, family=binomial)
 
 summary(lr.spline.difsoint)
+res <- summary(lr.spline.difsoint)
 
 
 # Plot logistic regression by stream order --------------------------------

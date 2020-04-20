@@ -206,6 +206,7 @@ allobs$nhdclass <- mapply(nhdclass, allobs$FCODE)
 allobs$mctype <- mapply(misclass_type, allobs$nhdclass, allobs$Category)
 allobsmc <- subset(allobs, allobs$mc == 1)
 
+allmrhr <- allmrhr[allmrhr$distHR < 100.0, ]
 allmrhr$mcmr <- mapply(misclass, allmrhr$FCODE, allmrhr$Category)
 allmrhr$nhdclassmr <- mapply(nhdclass, allmrhr$FCODE)
 allmrhr$mctypemr <- mapply(misclass_type, allmrhr$nhdclassmr, allmrhr$Category)
